@@ -1,0 +1,5 @@
+# Prettier is configured with `endOfLine: 'lf'` and CI runs on Linux, so a clone made on Windows
+# with the usual `core.autocrlf=true` would check out CRLF and disagree with the linter about
+# files nobody had touched. Normalise on the way in and check out LF everywhere.
+* text=auto eol=lf
+*.png binary
