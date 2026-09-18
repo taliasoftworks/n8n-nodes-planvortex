@@ -19,7 +19,11 @@ export class PlanVortex implements INodeType {
 		outputs: [NodeConnectionTypes.Main],
 		credentials: [{ name: 'planVortexOAuth2Api', required: true }],
 		requestDefaults: {
-			baseURL: 'https://api.planvortex.com/v1.0.0',
+			// The base URL comes from the credential, never from a constant here: the credential is
+			// where the access token URL is derived from too, and the two pointing at different
+			// environments is the failure that reads as "invalid credentials".
+			baseURL:
+				'={{$credentials.baseUrl.endsWith("/") ? $credentials.baseUrl.slice(0, -1) : $credentials.baseUrl}}',
 			headers: {
 				Accept: 'application/json',
 				'Content-Type': 'application/json',

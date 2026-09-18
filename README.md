@@ -35,6 +35,18 @@ You need a PlanVortex account and an **app** (API credentials), which you create
 panel. An app gives you a `client_id` and a `client_secret`; the node exchanges them for an access
 token using the OAuth 2.0 client-credentials grant, and n8n caches that token for you.
 
+Create a **PlanVortex OAuth2 API** credential in n8n and fill in three fields:
+
+| Field | What goes in it |
+| --- | --- |
+| Base URL | `https://api.planvortex.com/v1.0.0` — leave it alone unless you were given another environment |
+| Client ID | the app's `client_id` |
+| Client Secret | the app's `client_secret` |
+
+There is no "Connect" button and there should not be one: the client-credentials grant has no
+consent screen. Use **Test** instead — it performs the real token exchange and reads back the
+clients and organizations the app can see.
+
 Apps are available on all PlanVortex plans, including the free one.
 
 Note that **comments and comment replies require a paid plan**. A workflow built on a free plan

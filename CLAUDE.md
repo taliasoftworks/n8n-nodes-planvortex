@@ -49,11 +49,16 @@ No attribution lines in commit messages, and **watch the PR footer too**.
 ## Layout
 
 - `nodes/PlanVortex/` — the node, its icon and its resource descriptions.
+- `nodes/PlanVortex/transport/` — **the only place that goes to the network.** Base URL,
+  credential, paging convention and the shape of an error are decided once, there. Nothing else
+  calls `this.helpers.httpRequest` — the same rule `slack/Http.ts` and `discord/Http.ts` keep in
+  the server repo.
 - `credentials/` — the credential type. It extends n8n's generic `oAuth2Api` with
   `grantType: clientCredentials`; n8n obtains and caches the token itself, and PlanVortex's
   `POST /oauth/token` already accepts both `client_secret_post` and `client_secret_basic`.
 - `test/` — vitest, no network.
 - `scripts/scan-local.mjs` — runs n8n's official static analysis against this working copy.
+- `scripts/check-credentials.mjs` — the only script that touches a real deployment. Read-only.
 
 ## Commands
 
@@ -63,7 +68,14 @@ npm run lint      # n8n-node lint (the same rules the verification scan applies)
 npm test          # vitest, no network
 npm run scan      # n8n's community-package scanner, against this working copy
 npm run dev       # n8n-node dev: a local n8n with this node loaded
+
+# Read-only, against a real deployment. Needs PLANVORTEX_CLIENT_ID and PLANVORTEX_CLIENT_SECRET.
+npm run credentials:check
 ```
+
+`npm run lint` prints nothing when it passes. To convince yourself it is still running, put a
+`color` inside the node's `defaults` and watch it go red — a `color` at the top level of the
+description does **not** trip it, which is a convincing-looking way to be fooled.
 
 `npx @n8n/scan-community-package n8n-nodes-planvortex` is the published-package form of `npm run
 scan`: it downloads the tarball from npm and also checks provenance, so it cannot run until the
