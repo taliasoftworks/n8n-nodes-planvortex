@@ -30,6 +30,9 @@
     "node": ">=20"
   },
   "scripts": {
+    "errors:sync": "node scripts/sync-errors.mjs",
+    "errors:generate": "node scripts/generate-errors.mjs",
+    "prebuild": "npm run errors:generate",
     "build": "n8n-node build",
     "build:watch": "tsc --watch",
     "dev": "n8n-node dev",

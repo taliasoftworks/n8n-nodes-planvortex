@@ -82,6 +82,22 @@ Apps are available on all PlanVortex plans, including the free one.
 Note that **comments and comment replies require a paid plan**. A workflow built on a free plan
 will publish happily and fail on the comment steps.
 
+## Errors
+
+PlanVortex answers a **numbered error code**, and the number is what says what happened — not the
+HTTP status. Almost everything arrives as a 400: an expired token, a disconnected account, a text
+that is too long and a plan that does not include the feature are all 400s, and only rate limits
+(429) and permissions (401) differ.
+
+So the node shows you two lines: the API's own message, and underneath it what to do about that
+particular code. They are different things for codes that sit next to each other — 516 means the
+account is on the free plan, 519 means the call can never be made with app credentials, and 520
+means the app is missing a permission and names which one. The code itself is in the second line,
+which is what to quote if you ask support.
+
+Turning on **Continue On Fail** is worth it for any workflow that touches several accounts: one
+disconnected account then costs you that item instead of the whole run.
+
 ## Compatibility
 
 Requires Node.js 20 or newer. Tested against current n8n versions.

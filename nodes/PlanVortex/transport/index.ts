@@ -9,6 +9,7 @@ import type {
 	JsonObject,
 } from 'n8n-workflow';
 import { NodeApiError } from 'n8n-workflow';
+import { describeApiError, type PlanVortexErrorBody } from './errors';
 
 /**
  * The one door to the PlanVortex API.
@@ -33,13 +34,6 @@ const DEFAULT_BASE_URL = 'https://api.planvortex.com/v1.0.0';
 const PAGE_SIZE = 100;
 
 export type PlanVortexContext = IExecuteFunctions | ILoadOptionsFunctions | IHookFunctions;
-
-/** The body every PlanVortex error answers with: `{code, message, data}`. */
-interface PlanVortexErrorBody {
-	code: number;
-	message?: string;
-	data?: IDataObject;
-}
 
 function isObject(value: unknown): value is IDataObject {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -98,9 +92,8 @@ function readApiFailure(error: unknown): { body?: PlanVortexErrorBody; httpCode?
  * that same instance untouched, so the usual community-node reflex of wrapping the caught error
  * with a nicer message silently discards the message. The original body is passed instead.
  *
- * The wording is still the server's own. Phase 4 of the roadmap replaces it with the generated
- * catalogue — `code` is the key it will look the message up by, and this is the only place that
- * has to change.
+ * The headline stays the API's own sentence and the subtitle says what to do about it; both come
+ * from `describeApiError`, which is the only place that decides either.
  */
 function toPlanVortexError(node: INode, error: unknown): Error {
 	const { body, httpCode } = readApiFailure(error);
@@ -112,8 +105,7 @@ function toPlanVortexError(node: INode, error: unknown): Error {
 	}
 
 	return new NodeApiError(node, body as unknown as JsonObject, {
-		message: body.message ?? `PlanVortex request failed with code ${body.code}`,
-		description: `PlanVortex error code ${body.code}`,
+		...describeApiError(body),
 		httpCode,
 	});
 }

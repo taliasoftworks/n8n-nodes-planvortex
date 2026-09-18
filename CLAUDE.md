@@ -38,6 +38,7 @@ nothing.
 
 Dev dependencies *are* allowed, which is the escape hatch for the error catalogue: it is
 **generated at build time** from the same source that feeds the libraries, never retyped by hand.
+See *The error catalogue* below.
 
 `test/dependencies.test.ts` fails the build the day someone adds "just one small utility".
 
@@ -45,6 +46,41 @@ Dev dependencies *are* allowed, which is the escape hatch for the error catalogu
 
 This repo is public, like `PlanVortexNode` — whose history already had to be rewritten for this.
 No attribution lines in commit messages, and **watch the PR footer too**.
+
+## The error catalogue
+
+PlanVortex classifies by a numbered `code` in the body, never by the HTTP status: an expired token,
+a disconnected account and a text that is too long are all 400s. The catalogue lives in the server
+repository and this package may not import it, so it is **read, committed and generated** — in two
+steps, because CI clones only this repository:
+
+```bash
+npm run errors:sync       # upstream -> errors/planvortex-errors.json   (needs the sibling repos)
+npm run errors:generate   # that JSON -> nodes/PlanVortex/transport/errors.generated.ts
+```
+
+`errors:generate` also runs automatically before every build, so the generated file is never stale
+against the snapshot. Both outputs are committed.
+
+**The point is not saving typing — it is that the hand-written half stops compiling when the
+catalogue moves.** `nodes/PlanVortex/transport/errors.ts` is typed against the generated one, so:
+
+- a per-code note for a code the server retired (924 and 1401 went that way) is a build error;
+- a family added upstream leaves the per-family table incomplete, which is a build error;
+- a catalogue message that is not in English needs an English replacement, and the compiler asks
+  for it — that is how rule 1 above survives a message written in Spanish upstream.
+
+**The advice is per code first and per family second, and that order is the whole design.** The
+catalogue groups by range and a range is not a diagnosis: 516 (free plan), 519 (a call an app may
+never make) and 520 (a missing permission) all live in the range the docs call "auth", and the MCP
+server shipped advice that told users with perfect credentials to go and check their credentials.
+
+One more thing the generator does deliberately: **a family runs from its own first code up to the
+next family's, not up to the `to` its range documents.** The published ceilings lag behind the
+server — 547, 548 and 716 already sit above theirs — and reading them literally answers "unknown
+family", whose generic advice is "do not just retry" while 716 means exactly the opposite.
+`errors:sync` prints the codes that have passed a documented ceiling; that list is a nudge to
+update the OpenAPI sentence in PlanVortexHome, not something this package can fix.
 
 ## Layout
 
@@ -70,6 +106,8 @@ to resolve the account's network first because the API requires it in the body.
   `grantType: clientCredentials`; n8n obtains and caches the token itself, and PlanVortex's
   `POST /oauth/token` already accepts both `client_secret_post` and `client_secret_basic`.
 - `test/` — vitest, no network.
+- `errors/planvortex-errors.json` — the committed snapshot of the server's error catalogue.
+- `scripts/sync-errors.mjs`, `scripts/generate-errors.mjs` — the two steps above.
 - `scripts/scan-local.mjs` — runs n8n's official static analysis against this working copy.
 - `scripts/check-credentials.mjs` — the only script that touches a real deployment. Read-only.
 
@@ -81,6 +119,9 @@ npm run lint      # n8n-node lint (the same rules the verification scan applies)
 npm test          # vitest, no network
 npm run scan      # n8n's community-package scanner, against this working copy
 npm run dev       # n8n-node dev: a local n8n with this node loaded
+
+npm run errors:generate   # errors/planvortex-errors.json -> errors.generated.ts (runs before build)
+npm run errors:sync       # refresh that JSON from PlanVortexServer and the published OpenAPI
 
 # Read-only, against a real deployment. Needs PLANVORTEX_CLIENT_ID and PLANVORTEX_CLIENT_SECRET.
 npm run credentials:check

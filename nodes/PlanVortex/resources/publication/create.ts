@@ -1,6 +1,7 @@
 import type { IDataObject, INodeProperties, JsonObject } from 'n8n-workflow';
 import { NodeApiError } from 'n8n-workflow';
 import { planVortexApiRequest } from '../../transport';
+import { describeApiError } from '../../transport/errors';
 import {
 	getAccountOnce,
 	getOrganizationId,
@@ -174,10 +175,19 @@ export const createPublication: OperationHandler = async function (this, index, 
 	const errors = (publication.publication_errors as IDataObject[] | undefined) ?? [];
 
 	if (failOnPublicationErrors && errors.length > 0) {
+		// The same translation the transport gives an HTTP failure, because these are the same
+		// numbered codes — and this is where a workflow meets them most often. A post that is too
+		// long or aimed at a network that does not publish never fails the request: it is stored
+		// with the reason inside it and answered with a 200.
 		const first = errors[0] ?? {};
+		const described = describeApiError({
+			code: Number(first.code ?? 0),
+			message: typeof first.message === 'string' ? first.message : undefined,
+			data: first.data as IDataObject | undefined,
+		});
 		throw new NodeApiError(this.getNode(), publication as unknown as JsonObject, {
-			message: String(first.message ?? 'The publication was stored with errors'),
-			description: `PlanVortex error code ${String(first.code ?? '')}. The publication exists in state ${String(publication.state ?? '')} and was not sent. Its full record, including every reason, is in the error details.`,
+			message: described.message,
+			description: `${described.description} The publication exists in state ${String(publication.state ?? '')} and was not sent. Its full record, including every reason, is in the error details.`,
 			itemIndex: index,
 		});
 	}
