@@ -12,8 +12,8 @@ and posting it to an internal Slack channel is normally three separate integrati
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/sustainable-use-license/)
 workflow automation platform.
 
-> **Status: in development.** The package is not published yet and the operations below are still
-> being built. Until then, PlanVortex works in n8n through the `HTTP Request` node against the REST
+> **Status: in development.** The operations below are built, but the package is not published to
+> npm yet. Until it is, PlanVortex works in n8n through the `HTTP Request` node against the REST
 > API, or through the `MCP Client` node pointed at `npx -y planvortex-mcp`.
 
 ## Installation
@@ -26,8 +26,38 @@ panel.
 
 ## Operations
 
-Not implemented yet. Anything this node does not cover is reachable with the `HTTP Request` node
-against the [PlanVortex API](https://planvortex.com/en/developers).
+| Resource | Operation | What it does |
+| --- | --- | --- |
+| Publication | Create | Publishes now or schedules a post on one connected account |
+| Media | Upload | Puts an image or a video in the organization's library, ready to attach |
+| Account | Get Many | Lists the connected accounts, with a filter for what their network can do |
+| Account | Create Connect Link | Mints a single-use link for a person to connect one of their own accounts |
+| Comment | Get Many | Reads the comment and review inbox |
+| Comment | Reply | Publishes a public reply to a comment or a review |
+| Social Network | Get Capabilities | Says what every network supports, one item per network |
+
+The organization and the account are **dropdowns**, filled from your own account: nothing here
+asks you to paste an id. Both still accept an expression when the id comes from an earlier node.
+
+Seven operations, not one hundred and thirty-five. Anything else the API does is one `HTTP Request`
+node away, using the same credential — see the [PlanVortex API
+documentation](https://planvortex.com/en/developers).
+
+Four things are worth knowing before you build on them:
+
+- **Connecting a social account cannot be automated.** It is an OAuth flow with a person clicking
+  "authorize" on the network's own screen, and app credentials are refused outright. *Create
+  Connect Link* gives you a link that lasts fifteen minutes and connects one account; send your
+  user to it and watch the accounts listing for the result.
+- **An invalid post is not an error.** PlanVortex stores it in state `withErrors`, with the reasons
+  inside it, and answers 200 — so a workflow that only watches for exceptions would report a post
+  that never went out as sent. *Create* has a **Fail on Publication Errors** toggle, on by default,
+  that turns it into a real failure.
+- **Not every network does everything.** Google Business receives reviews and never publishes,
+  WhatsApp has no feed, Slack publishes and has no comment inbox at all. *Get Capabilities* is how
+  a workflow finds that out once instead of one network at a time, in production. The account
+  dropdown for publishing already hides the accounts that cannot publish.
+- **Comments and replies need a paid plan.** The rest of this node works on the free one.
 
 ## Credentials
 

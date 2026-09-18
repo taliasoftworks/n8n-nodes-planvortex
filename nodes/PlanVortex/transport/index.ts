@@ -140,6 +140,13 @@ export async function planVortexApiRequest(
 		method,
 		url: `${baseUrl}${endpoint}`,
 		json: true,
+		// A repeated parameter, `?social_network=youtube&social_network=instagram`, is what the
+		// API reads. It is stated rather than left to the default because the two conventions
+		// fail differently: the comments listing parses only repeats, so `social_network[0]=...`
+		// comes back as an unfiltered inbox — a wrong answer with a 200 on it, which is the kind
+		// that gets believed. The accounts listing happens to accept a comma-separated string as
+		// well, and that difference is exactly why this is decided once, here.
+		arrayFormat: 'repeat',
 		...(body !== undefined && Object.keys(body).length > 0 ? { body } : {}),
 		...(qs !== undefined && Object.keys(qs).length > 0 ? { qs } : {}),
 		...overrides,
@@ -147,13 +154,34 @@ export async function planVortexApiRequest(
 	};
 
 	try {
-		return await this.helpers.httpRequestWithAuthentication.call(
+		const response = await this.helpers.httpRequestWithAuthentication.call(
 			this,
 			PLANVORTEX_CREDENTIALS,
 			options,
 		);
+		return parseJsonResponse(response);
 	} catch (error) {
 		throw toPlanVortexError(this.getNode(), error);
+	}
+}
+
+/**
+ * The API answers JSON on every route, and n8n normally hands it back parsed. The media upload is
+ * the exception that makes this worth a function: it has to travel with `json: false`, because its
+ * body is a `FormData` and the flag that says "serialize this as JSON" is the same flag that says
+ * "parse the answer as JSON". Whether the helper still parses a JSON response body in that case is
+ * its business, not ours, and the failure would be a `[object Object]` where an upload id belongs.
+ */
+function parseJsonResponse(response: unknown): unknown {
+	if (typeof response !== 'string') return response;
+	const trimmed = response.trim();
+	if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) return response;
+	try {
+		return JSON.parse(trimmed);
+	} catch {
+		// Not JSON after all. Handing back the string is more use to whoever has to read the
+		// failure than an exception about the shape of something we never promised to parse.
+		return response;
 	}
 }
 

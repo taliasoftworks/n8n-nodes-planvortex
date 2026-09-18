@@ -49,10 +49,23 @@ No attribution lines in commit messages, and **watch the PR footer too**.
 ## Layout
 
 - `nodes/PlanVortex/` — the node, its icon and its resource descriptions.
+- `nodes/PlanVortex/resources/<resource>/<operation>.ts` — one operation per file, holding both its
+  parameters and the function that runs it. The node's `execute` is only a router, and it is the
+  one place that attaches `pairedItem`, so an operation cannot forget to.
+- `nodes/PlanVortex/methods/loadOptions.ts` — the dropdowns. Every route in the API hangs off an
+  `id_organization` that whoever builds the workflow has no way of knowing, so it is looked up
+  here and the person picks a name.
 - `nodes/PlanVortex/transport/` — **the only place that goes to the network.** Base URL,
-  credential, paging convention and the shape of an error are decided once, there. Nothing else
-  calls `this.helpers.httpRequest` — the same rule `slack/Http.ts` and `discord/Http.ts` keep in
-  the server repo.
+  credential, paging convention, array-in-query convention and the shape of an error are decided
+  once, there. Nothing else calls `this.helpers.httpRequest` — the same rule `slack/Http.ts` and
+  `discord/Http.ts` keep in the server repo.
+
+**The node is programmatic, not declarative, and that is not a preference.** Declarative routing
+goes to the network by itself, which would leave half the operations translating PlanVortex's
+numbered errors and half not — and the half that did not would be the half nobody notices until a
+workflow fails at three in the morning. Two operations could not be declarative anyway: the media
+upload reads binary data off the item and builds a multipart body, and creating a publication has
+to resolve the account's network first because the API requires it in the body.
 - `credentials/` — the credential type. It extends n8n's generic `oAuth2Api` with
   `grantType: clientCredentials`; n8n obtains and caches the token itself, and PlanVortex's
   `POST /oauth/token` already accepts both `client_secret_post` and `client_secret_basic`.
@@ -76,6 +89,13 @@ npm run credentials:check
 `npm run lint` prints nothing when it passes. To convince yourself it is still running, put a
 `color` inside the node's `defaults` and watch it go red — a `color` at the top level of the
 description does **not** trip it, which is a convincing-looking way to be fooled.
+
+The lint reads the **source**, not the running value, and the difference shows up in one place:
+any parameter whose options are loaded from the API has to end its `description` with n8n's exact
+sentence — *"Choose from the list, or specify an ID using an expression"*, with the link — written
+as a **plain string literal**. A template literal that produces exactly that string is still
+reported, so the sentence is spelled out in every dynamic parameter instead of shared from a
+constant.
 
 `npx @n8n/scan-community-package n8n-nodes-planvortex` is the published-package form of `npm run
 scan`: it downloads the tarball from npm and also checks provenance, so it cannot run until the
