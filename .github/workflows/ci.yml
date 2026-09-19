@@ -12,7 +12,51 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # n8n itself runs on Node 20 and up, which is what `engines` declares. Nothing here is
+        # version-specific, but the node is installed into somebody else's n8n and that is the
+        # runtime it has to build and run under.
+        node: [20, 22, 24]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: 'npm ci'
+
+      # The same rules n8n's verification scan applies, so a rejection shows up here first.
+      - name: Run lint
+        run: 'npm run lint'
+
+      # Vitest runs the tests through esbuild, which strips types without checking them: without
+      # this step a test can be wrong about the shape of what it imports and still go green.
+      - name: Type-check the sources and the tests
+        run: 'npm run typecheck'
+
+      - name: Run tests
+        run: 'npm test'
+
+      - name: Run build
+        run: 'npm run build'
+
+  scan:
+    # n8n's own static analysis of the package.
+    #
+    # The published CLI — `npx @n8n/scan-community-package n8n-nodes-planvortex` — downloads the
+    # tarball from npm and verifies its provenance attestation, so it cannot run until the package
+    # exists on the registry. What runs here is the lint gate underneath it, which is the part
+    # that decides whether the code passes, against this checkout.
     runs-on: ubuntu-latest
 
     steps:
@@ -27,8 +71,30 @@ jobs:
       - name: Install dependencies
         run: 'npm ci'
 
-      - name: Run lint
-        run: 'npm run lint'
+      - name: Run the n8n community-package scan
+        run: 'npm run scan'
 
-      - name: Run build
-        run: 'npm run build'
+  catalogue-in-sync:
+    # The error catalogue is generated from `errors/planvortex-errors.json` and both are
+    # committed, because CI clones only this repository and the server's catalogue is not here.
+    # Regenerating and diffing is what catches the commit that edited one of the two by hand —
+    # the generated file says "do not edit" and that is not a mechanism.
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: 'npm ci'
+
+      - name: Regenerate the error catalogue
+        run: 'npm run errors:generate'
+
+      - name: Check it matches what is committed
+        run: 'git diff --exit-code nodes/PlanVortex/transport/errors.generated.ts'

@@ -1,0 +1,10 @@
+{
+	"$comment": "Vitest runs the tests through esbuild, which strips the types without checking them: a test can be wrong about the shape of what it imports and still go green. The build cannot cover this either, because its own tsconfig only includes what gets published. So the tests are type-checked separately, by `npm run typecheck`, and that is what notices a renamed export or a changed signature the day it happens.",
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"incremental": false,
+		"types": ["node"]
+	},
+	"include": ["credentials/**/*", "nodes/**/*", "test/**/*", "package.json"]
+}

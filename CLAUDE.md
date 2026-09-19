@@ -105,7 +105,12 @@ to resolve the account's network first because the API requires it in the body.
 - `credentials/` — the credential type. It extends n8n's generic `oAuth2Api` with
   `grantType: clientCredentials`; n8n obtains and caches the token itself, and PlanVortex's
   `POST /oauth/token` already accepts both `client_secret_post` and `client_secret_basic`.
-- `test/` — vitest, no network.
+- `test/` — vitest, no network and no credentials. One file per seam: the requests the
+  transport builds, the translation of an error, the seven operations, the dropdowns, the
+  node's own routing, the credential, and the two that guard what n8n's verification checks
+  (`dependencies.test.ts`, `verification.test.ts`). `test/helpers/context.ts` is the n8n they
+  all run inside: it records every request exactly as it was built and never normalises it,
+  because a fake that tidied the options up would be testing itself.
 - `errors/planvortex-errors.json` — the committed snapshot of the server's error catalogue.
 - `scripts/sync-errors.mjs`, `scripts/generate-errors.mjs` — the two steps above.
 - `scripts/scan-local.mjs` — runs n8n's official static analysis against this working copy.
@@ -117,6 +122,7 @@ to resolve the account's network first because the API requires it in the body.
 npm run build     # n8n-node build
 npm run lint      # n8n-node lint (the same rules the verification scan applies)
 npm test          # vitest, no network
+npm run typecheck # tsc over the sources AND the tests — vitest does not type-check them
 npm run scan      # n8n's community-package scanner, against this working copy
 npm run dev       # n8n-node dev: a local n8n with this node loaded
 
@@ -126,6 +132,16 @@ npm run errors:sync       # refresh that JSON from PlanVortexServer and the publ
 # Read-only, against a real deployment. Needs PLANVORTEX_CLIENT_ID and PLANVORTEX_CLIENT_SECRET.
 npm run credentials:check
 ```
+
+**`npm test` on its own is not a gate.** Vitest runs the tests through esbuild, which strips
+the types without checking them, and the build's `tsconfig.json` only includes what gets
+published — so nothing was checking the tests at all. `npm run typecheck` uses
+`tsconfig.test.json` for that, and it earned its place the moment it was written by catching a
+cast that was wrong.
+
+CI runs lint, typecheck, test and build on Node 20, 22 and 24, plus two jobs of their own: the
+n8n scan, and a regeneration of the error catalogue diffed against what is committed — the
+generated file says "do not edit" and that sentence is not a mechanism.
 
 `npm run lint` prints nothing when it passes. To convince yourself it is still running, put a
 `color` inside the node's `defaults` and watch it go red — a `color` at the top level of the
