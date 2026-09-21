@@ -12,17 +12,19 @@ and posting it to an internal Slack channel is normally three separate integrati
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/sustainable-use-license/)
 workflow automation platform.
 
-> **Status: in development.** The operations below are built, but the package is not published to
-> npm yet. Until it is, PlanVortex works in n8n through the `HTTP Request` node against the REST
-> API, or through the `MCP Client` node pointed at `npx -y planvortex-mcp`.
+> **Status: verification by n8n pending.** Until n8n verifies this node it can be installed on a
+> **self-hosted** n8n only, not on n8n Cloud. On Cloud, in the meantime, PlanVortex works through
+> the `HTTP Request` node against the [REST API](https://planvortex.com/en/developers).
 
 ## Installation
 
-Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in
-the n8n community nodes documentation.
+**Self-hosted n8n:** go to **Settings → Community Nodes**, choose **Install** and enter
+`n8n-nodes-planvortex`. The [installation
+guide](https://docs.n8n.io/integrations/community-nodes/installation/) covers the other ways,
+including the command line.
 
-On n8n Cloud, only the instance **owner or an admin** can install a community node, from the nodes
-panel.
+**n8n Cloud:** once n8n has verified the node, the instance **owner or an admin** installs it from
+the nodes panel. Nobody else on the instance can.
 
 ## Operations
 
@@ -100,7 +102,8 @@ disconnected account then costs you that item instead of the whole run.
 
 ## Compatibility
 
-Requires Node.js 20 or newer. Tested against current n8n versions.
+Requires Node.js 20 or newer. Built and unit-tested against `n8n-workflow` 2.x, the library n8n 2
+runs on.
 
 ## Resources
 

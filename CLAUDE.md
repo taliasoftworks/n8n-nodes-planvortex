@@ -114,6 +114,7 @@ to resolve the account's network first because the API requires it in the body.
 - `errors/planvortex-errors.json` — the committed snapshot of the server's error catalogue.
 - `scripts/sync-errors.mjs`, `scripts/generate-errors.mjs` — the two steps above.
 - `scripts/scan-local.mjs` — runs n8n's official static analysis against this working copy.
+- `scripts/scan-published.mjs` — the same scanner against a version on npm, with an exit code.
 - `scripts/check-credentials.mjs` — the only script that touches a real deployment. Read-only.
 
 ## Commands
@@ -123,7 +124,8 @@ npm run build     # n8n-node build
 npm run lint      # n8n-node lint (the same rules the verification scan applies)
 npm test          # vitest, no network
 npm run typecheck # tsc over the sources AND the tests — vitest does not type-check them
-npm run scan      # n8n's community-package scanner, against this working copy
+npm run scan      # builds, then n8n's scanner over the source AND the files the tarball carries
+npm run scan:published -- 0.1.0   # n8n's full scan of a version on npm, provenance included
 npm run dev       # n8n-node dev: a local n8n with this node loaded
 
 npm run errors:generate   # errors/planvortex-errors.json -> errors.generated.ts (runs before build)
@@ -139,9 +141,9 @@ published — so nothing was checking the tests at all. `npm run typecheck` uses
 `tsconfig.test.json` for that, and it earned its place the moment it was written by catching a
 cast that was wrong.
 
-CI runs lint, typecheck, test and build on Node 20, 22 and 24, plus two jobs of their own: the
-n8n scan, and a regeneration of the error catalogue diffed against what is committed — the
-generated file says "do not edit" and that sentence is not a mechanism.
+CI runs lint, typecheck, test and build on Node 22 and 24 (not 20: see `ci.yml`), plus two jobs
+of their own: the n8n scan, and a regeneration of the error catalogue diffed against what is
+committed — the generated file says "do not edit" and that sentence is not a mechanism.
 
 `npm run lint` prints nothing when it passes. To convince yourself it is still running, put a
 `color` inside the node's `defaults` and watch it go red — a `color` at the top level of the
@@ -155,7 +157,38 @@ reported, so the sentence is spelled out in every dynamic parameter instead of s
 constant.
 
 `npx @n8n/scan-community-package n8n-nodes-planvortex` is the published-package form of `npm run
-scan`: it downloads the tarball from npm and also checks provenance, so it cannot run until the
-package is published.
+scan`, and the one n8n runs on a submission: provenance first, then the source at the commit the
+provenance names (downloaded from GitHub), then the tarball. **Do not wire that CLI into anything:
+it prints a ❌ and exits 0**, and even its progress line says "✅ Analyzed" over a failure.
+`npm run scan:published` calls the same function and exits 1. (On Windows, run it from
+PowerShell: under Git Bash the scanner picks up GNU `tar`, which cannot extract to a `C:\` path,
+and it reports that as a source it could not fetch.)
+
+## Releasing
+
+Publishing is `.github/workflows/publish.yml`, and **only** that: n8n does not verify a package
+published from a laptop, and `prepublishOnly` refuses a hand-made `npm publish` for that reason.
+A release is cut by hand, as in the other PlanVortex packages:
+
+1. Bump `version` in `package.json` and write its entry in `CHANGELOG.md`.
+2. Commit, then tag **that** commit `vX.Y.Z` and push both: `git push origin main vX.Y.Z`.
+
+The workflow refuses a tag that does not match `package.json`, runs every gate, publishes with
+provenance, and then scans what it published the way n8n will. It is idempotent: a version
+already on npm is not published again, so re-pushing a tag is a green no-op.
+
+`npm run release` is the scaffold's release-it, and it is kept because n8n's tooling expects it.
+It tags `vX.Y.Z` too (`release-it.git.tagName` in `package.json` — the workflow ignores any other
+tag, silently), but it **regenerates `CHANGELOG.md` from commit messages** with auto-changelog,
+overwriting what was written by hand. Prefer the two steps above.
+
+**Authentication is npm's Trusted Publisher (OIDC)**, configured on npmjs.com against owner
+`taliasoftworks`, repository `n8n-nodes-planvortex` and workflow `publish.yml` — compared
+character by character, and npm does not say which one is wrong: the symptom is an `E404` on the
+upload that means "not allowed", not "not found". There is no npm token in the repository. The
+one exception was the very first publish: npm only lets a Trusted Publisher be configured on a
+package that already exists, so 0.1.0 is published by this same workflow with a temporary
+`NPM_TOKEN` secret, revoked and deleted straight after. The workflow still honours that secret if it is ever set, and says so in
+the log; it should not be.
 
 @AGENTS.md

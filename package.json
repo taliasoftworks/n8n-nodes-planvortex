@@ -41,7 +41,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.test.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "scan": "node scripts/scan-local.mjs",
+    "scan": "npm run build && node scripts/scan-local.mjs",
+    "scan:published": "node scripts/scan-published.mjs",
     "credentials:check": "node scripts/check-credentials.mjs",
     "release": "n8n-node release",
     "prepublishOnly": "n8n-node prerelease"
@@ -71,5 +72,10 @@
   },
   "peerDependencies": {
     "n8n-workflow": "*"
+  },
+  "release-it": {
+    "git": {
+      "tagName": "v${version}"
+    }
   }
 }

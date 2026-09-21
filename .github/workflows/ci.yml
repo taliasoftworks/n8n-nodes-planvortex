@@ -18,10 +18,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # n8n itself runs on Node 20 and up, which is what `engines` declares. Nothing here is
-        # version-specific, but the node is installed into somebody else's n8n and that is the
-        # runtime it has to build and run under.
-        node: [20, 22, 24]
+        # Node 20 is NOT here, and not because the package dropped it. What ships has no
+        # dependencies and touches no Node API, so it runs wherever n8n runs — n8n 1.x and early
+        # 2.x ran on Node 20.19+, which is why `engines` still says >=20. What cannot run on 20 is
+        # the DEV toolchain: the `n8n-workflow` peer resolves to 2.40, whose expression runtime
+        # pulls `isolated-vm` 7, a native module with prebuilt binaries for Node 24 and 26 only.
+        # Anywhere else `npm ci` compiles it from source: that works on 22 and fails on 20, so a
+        # Node 20 job was a red CI that said nothing about this package. The day 22 stops
+        # compiling it, 22 goes the same way — n8n itself asks for Node 24 since 2.x.
+        node: [22, 24]
 
     steps:
       - uses: actions/checkout@v4
@@ -51,12 +56,11 @@ jobs:
         run: 'npm run build'
 
   scan:
-    # n8n's own static analysis of the package.
+    # n8n's own static analysis of the package, over the two sets of files its scanner lints on a
+    # release: the source, and what the tarball will carry (so `npm run scan` builds first).
     #
-    # The published CLI — `npx @n8n/scan-community-package n8n-nodes-planvortex` — downloads the
-    # tarball from npm and verifies its provenance attestation, so it cannot run until the package
-    # exists on the registry. What runs here is the lint gate underneath it, which is the part
-    # that decides whether the code passes, against this checkout.
+    # The third thing the scanner checks — the provenance attestation — needs a version on npm to
+    # read it from, so it runs after publishing, in `publish.yml` (`npm run scan:published`).
     runs-on: ubuntu-latest
 
     steps:

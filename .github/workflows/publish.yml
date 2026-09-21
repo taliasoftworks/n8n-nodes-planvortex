@@ -1,65 +1,39 @@
-# Publishes this n8n community node package to npm on every version tag push.
+# Publishes n8n-nodes-planvortex to npm when a version tag is pushed, then runs n8n's own scan
+# against what was published.
 #
-# Starting May 1 2026, n8n requires all community nodes to be published via
-# GitHub Actions with npm provenance statements. This workflow satisfies that
-# requirement. Provenance lets anyone cryptographically verify that a package
-# was built by this exact workflow, from this exact repository and commit.
+# Since 01-05-2026 n8n only verifies community nodes published from GitHub Actions with an npm
+# provenance statement: a package published from a laptop can never reach n8n Cloud. This file
+# replaces the scaffold's `publish.yml` — same name, because npm's Trusted Publisher is
+# configured against it — with what the other PlanVortex packages learnt publishing theirs.
 #
-# ─── PREREQUISITES ─────────────────────────────────────────────────────────────
+# ─── RELEASING ─────────────────────────────────────────────────────────────────
 #
-# @n8n/node-cli ≥ 0.23.0 is required. Earlier versions do not support the
-# provenance flag passed by `npm run release` in CI, and the publish step will
-# fail. Check the version installed in this project with:
+# Bump `version` in package.json, add its CHANGELOG entry, commit, then tag THAT commit:
 #
-#   npm list @n8n/node-cli
+#   git tag v0.1.1 && git push origin main v0.1.1
 #
-# To upgrade, add @n8n/node-cli@latest as a dev dependency using your package manager.
+# A tag that does not match package.json fails the run instead of publishing nothing in green.
 #
-# ─── ONE-TIME SETUP ────────────────────────────────────────────────────────────
+# ─── AUTHENTICATION ────────────────────────────────────────────────────────────
 #
-# Option A — OIDC Trusted Publishing (recommended, no long-lived secrets):
-#   1. Log in to npmjs.com and open your package's settings.
-#   2. Under "Publish access" → "Trusted Publishers", click "Add a publisher".
-#   3. Select GitHub Actions and fill in:
-#        Repository owner: <your-github-username-or-org>
-#        Repository name:  <your-repo-name>
-#        Workflow name:    publish.yml
-#        Environment:      (leave blank unless you use GitHub Environments)
-#   4. Leave the NPM_TOKEN secret unset in this repository. GitHub's OIDC
-#      token is used instead — no secret ever touches your repo settings.
+# Trusted publishing (OIDC): no npm token in the repository secrets. On npmjs.com the publisher
+# must read, character by character: owner `taliasoftworks`, repository
+# `n8n-nodes-planvortex`, workflow `publish.yml`, no environment. npm compares those strings
+# as they are and does not say which one is wrong.
 #
-# Option B — npm Automation Token (fallback):
-#   1. On npmjs.com: Access Tokens → Generate New Token → Granular Access Token.
-#      Scope it to this package with "Read and write" publish permission.
-#   2. In GitHub: Settings → Secrets and variables → Actions → New secret.
-#      Name it NPM_TOKEN and paste the token value.
-#
-# Both options work with --provenance. Provenance is signed by GitHub's OIDC
-# infrastructure regardless of how npm authentication is handled.
-#
-# ─── TAG CONVENTION ────────────────────────────────────────────────────────────
-#
-# This workflow triggers on tags matching "*.*.*" (e.g. 0.2.0).
-# If you prefer tags with a "v" prefix (e.g. v0.2.0), change the filter to:
-#   tags: ['v*.*.*']
-#
-# ─── RELEASE PROCESS ───────────────────────────────────────────────────────────
-#
-# Run the following command locally to start an interactive release:
-#
-#   npm run release
-#
-# This will lint, build, prompt for a version bump, update the changelog,
-# commit, tag, and push — which triggers this workflow to publish to npm.
+# The FIRST publish cannot use it: npm only lets a Trusted Publisher be configured on a package
+# that already exists. So version 0.1.0 goes out with a short-lived `NPM_TOKEN` secret — still
+# from this workflow, still with provenance — and then the publisher is configured, the token
+# revoked and the secret deleted. With the secret gone, the step below does not touch the token.
 
 name: Publish
 
 on:
   push:
-    tags:
-      # Matches 0.1.0, 1.2.3, 2.0.0-rc.1, etc.
-      # See "TAG CONVENTION" above if you prefer tags with a "v" prefix.
-      - '*.*.*'
+    tags: ['v*.*.*']
+  # To re-run a publish without moving the tag, when what failed was npm's plumbing and not the
+  # code. It publishes the version in package.json on the branch it is run from.
+  workflow_dispatch:
 
 jobs:
   publish:
@@ -67,33 +41,125 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      # Required to mint an OIDC token for npm provenance attestation.
+      # Signing the provenance AND authenticating, which are two separate things. The signature
+      # comes from `id-token: write` and works on its own; the credential comes from an exchange
+      # against npm that needs npm >= 11.5.1 and a Trusted Publisher that matches. When it does
+      # not match, npm signs the provenance anyway and sends the upload with no credential: the
+      # symptom is an `E404` that reads like "the package does not exist" and means "you are not
+      # allowed". The first release of `planvortex` burnt three attempts on that, and the cause
+      # was one lower-case letter in the repository name on npmjs.com.
       id-token: write
-      # Scoped down from the default (write) for least-privilege publishing.
+      contents: read
+
+    outputs:
+      version: ${{ steps.published.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      # Trusted publishing needs npm >= 11.5.1, and Node 22 ships npm 10.
+      - run: npm install -g npm@latest
+
+      # A tag pushed without bumping package.json would find that version already on npm, skip
+      # the publish and finish green, having released nothing.
+      - name: Does the tag match package.json?
+        if: github.ref_type == 'tag'
+        run: |
+          expected="v$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "$expected" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json, which says $expected. Bump the version, commit, and tag that commit."
+            exit 1
+          fi
+
+      # A tag can be pushed again — to move it onto the commit that was really published — and
+      # then this runs on a version that is already on npm. Without this step that is a red run
+      # with an E403 that means nothing; with it the release is idempotent.
+      - name: Is this version already on npm?
+        id: published
+        run: |
+          version=$(node -p "require('./package.json').version")
+          name=$(node -p "require('./package.json').name")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if npm view "$name@$version" version >/dev/null 2>&1; then
+            echo "already=yes" >> "$GITHUB_OUTPUT"
+            echo "$name@$version is already on npm: nothing will be published."
+          else
+            echo "already=no" >> "$GITHUB_OUTPUT"
+            echo "$name@$version is not on npm yet: publishing it."
+          fi
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+      # Builds, then lints the source and the files the tarball will carry with the same rules
+      # n8n's scanner applies. What gets published is the `dist/` this step builds.
+      - run: npm run scan
+
+      - name: Is the error catalogue in sync?
+        run: git diff --exit-code nodes/PlanVortex/transport/errors.generated.ts
+
+      - name: Publish to npm
+        if: steps.published.outputs.already == 'no'
+        env:
+          # The scaffold's `prepublishOnly` refuses any `npm publish` without it, so that nobody
+          # publishes this package from a laptop — which n8n would never verify.
+          RELEASE_MODE: 'true'
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "NPM_TOKEN is set: publishing with it. It exists for the first publish only — revoke it and delete the secret once the Trusted Publisher is configured."
+            npm config set "//registry.npmjs.org/:_authToken" "$NPM_TOKEN"
+          fi
+          npm publish --provenance --access public
+
+  verify:
+    # n8n's scanner against the version on npm, which is what the Creator Portal runs on a
+    # submission: provenance, then the source at the commit the provenance names, then the
+    # tarball. A red run here is a rejection seen before sending anything.
+    name: Scan the published package
+    needs: publish
+    runs-on: ubuntu-latest
+
+    permissions:
       contents: read
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 'lts/*'
+          node-version: 22
           cache: 'npm'
 
-      - name: Install dependencies
-        run: 'npm ci'
+      - run: npm ci
 
-      - name: Release
-        # Publishes to npm with a provenance attestation (requires id-token: write above).
-        # Lint and build run automatically as part of the release process.
-        #
-        # Option A (OIDC): leave NPM_TOKEN unset — the token step is skipped and
-        #   npm uses the OIDC exchange instead.
-        # Option B (token): set NPM_TOKEN in repo secrets — it is written to
-        #   .npmrc here before publishing.
-        run: |
-          [ -n "$NPM_TOKEN" ] && npm config set //registry.npmjs.org/:_authToken "$NPM_TOKEN"
-          npm run release
+      # npm takes a while to serve a new version, and answers from its cache in the meantime.
+      # Scanning in the second after the publish finds a 404 that looks like a scanner failure
+      # and is not one — the MCP server's registry job learnt that the same way. Waiting on the
+      # provenance field, not just on the version, waits on the exact thing the scan checks first.
+      - name: Wait until npm serves the version with its provenance
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          VERSION: ${{ needs.publish.outputs.version }}
+        run: |
+          name=$(node -p "require('./package.json').name")
+          for attempt in $(seq 1 30); do
+            if npm view "$name@$VERSION" dist.attestations.provenance.predicateType --prefer-online 2>/dev/null | grep -q 'slsa.dev/provenance'; then
+              echo "npm serves $name@$VERSION with provenance (attempt $attempt)."
+              exit 0
+            fi
+            echo "npm does not serve $name@$VERSION with provenance yet; attempt $attempt of 30."
+            sleep 10
+          done
+          echo "::error::npm did not serve $name@$VERSION with a provenance attestation within five minutes."
+          exit 1
+
+      - name: Run n8n's scan on the published package
+        run: npm run scan:published -- "${{ needs.publish.outputs.version }}"

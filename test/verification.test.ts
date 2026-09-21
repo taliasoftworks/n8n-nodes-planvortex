@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import packageJson from '../package.json';
 import { PlanVortexOAuth2Api } from '../credentials/PlanVortexOAuth2Api.credentials';
 import { PlanVortex } from '../nodes/PlanVortex/PlanVortex.node';
+import publishWorkflow from '../.github/workflows/publish.yml?raw';
 
 /**
  * What n8n's Creator Portal checks about the manifest, checked here first.
@@ -57,7 +58,11 @@ describe('the package manifest', () => {
 		expect(packageJson.files).toEqual(['dist']);
 	});
 
-	/** n8n itself runs on Node 20 and up; declaring less invites an install that cannot work. */
+	/**
+	 * The oldest Node any n8n still in use runs on: 1.x and early 2.x ask for 20.19+, and current
+	 * 2.x for 24. The package itself imposes nothing — no dependencies, no Node API — so it follows
+	 * the oldest. (The CI matrix starts at 22 for a dev-toolchain reason explained in `ci.yml`.)
+	 */
 	it('asks for the Node versions n8n runs on', () => {
 		expect(packageJson.engines.node).toBe('>=20');
 	});
@@ -90,5 +95,57 @@ describe('the package manifest', () => {
 	it('regenerates the error catalogue before every build', () => {
 		const scripts = manifest.scripts as Record<string, string>;
 		expect(scripts.prebuild).toContain('errors:generate');
+	});
+});
+
+/**
+ * The workflow that publishes the package, read as text. Since 01-05-2026 n8n only verifies a
+ * node published from GitHub Actions with a provenance statement, and every way this file can be
+ * half-copied fails somewhere nobody is looking: a run that stays green having published nothing,
+ * or an `E404` that reads like a missing package and means a missing credential.
+ *
+ * It is imported with `?raw` for the same reason `package.json` is imported: `node:fs` is out of
+ * bounds in this repository, tests included.
+ */
+describe('the publish workflow', () => {
+	it('publishes from Actions with provenance, and may mint the token that signs it', () => {
+		expect(publishWorkflow).toContain('id-token: write');
+		expect(publishWorkflow).toContain('npm publish --provenance');
+	});
+
+	/**
+	 * Trusted publishing needs npm 11.5.1 and Node 22 ships npm 10. Without the upgrade npm still
+	 * signs the provenance, skips the exchange that would have authenticated it, and fails the
+	 * upload with an `E404`.
+	 */
+	it('upgrades npm before publishing', () => {
+		expect(publishWorkflow).toContain('npm install -g npm@latest');
+	});
+
+	/**
+	 * `npm run release` (the scaffold's release-it) creates and pushes the tag; this workflow only
+	 * runs on tags matching its trigger. If the two disagree, a release is tagged, pushed, and
+	 * nothing ever runs — no red run, no publish, nothing at all.
+	 */
+	it('listens to the tag the release tooling creates', () => {
+		const trigger = /tags:\s*\[\s*'([^']+)'\s*\]/.exec(publishWorkflow)?.[1];
+		expect(trigger).toBeDefined();
+
+		// GitHub's filter syntax: `*` is any run of characters other than `/`.
+		const glob = trigger!.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*');
+		const pattern = new RegExp(`^${glob}$`);
+		const releaseIt = manifest['release-it'] as { git: { tagName: string } };
+		const tag = releaseIt.git.tagName.replace('${version}', packageJson.version);
+
+		expect(tag).toMatch(pattern);
+	});
+
+	/**
+	 * `npx @n8n/scan-community-package` prints a failure and exits 0, so a step built on it is
+	 * green whatever it finds. The script turns the verdict into an exit code.
+	 */
+	it('scans what it published with a check that can fail the run', () => {
+		expect(publishWorkflow).toContain('npm run scan:published');
+		expect(publishWorkflow).not.toMatch(/npx\s+@n8n\/scan-community-package/);
 	});
 });
