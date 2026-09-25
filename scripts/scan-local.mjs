@@ -59,7 +59,19 @@ if (pack.status !== 0) {
 	fail('`npm pack --dry-run` did not run', pack.stderr);
 }
 
-const [{ files: packed }] = JSON.parse(pack.stdout);
+// The shape of that JSON changed with npm: 11 answers an array of packed packages, 12 an object
+// keyed by package name. CI installs `npm@latest`, so both are live at once — and destructuring
+// the wrong one dies with "object is not iterable", which reads like a broken scan and is a
+// version difference. Take whichever carries a `files` array.
+const packReport = JSON.parse(pack.stdout);
+const packed = (Array.isArray(packReport) ? packReport : Object.values(packReport)).find(
+	(entry) => Array.isArray(entry?.files),
+)?.files;
+
+if (!packed) {
+	fail('`npm pack --dry-run --json` answered a shape with no file list', pack.stdout.slice(0, 500));
+}
+
 const shippedFiles = packed
 	.map((file) => file.path)
 	.filter((path) => path.endsWith('.js') || path === 'package.json');
