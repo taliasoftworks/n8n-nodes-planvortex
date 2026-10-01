@@ -4,6 +4,14 @@ All notable changes to `n8n-nodes-planvortex` are documented here. The format fo
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project follows
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-10-01
+
+### Fixed
+
+- **The node now appears under Marketing & Content in the nodes panel.** Its codex file declared
+  the category `Marketing`, which n8n does not recognise and drops without a word, so the node was
+  listed under Communication only. Raised by n8n's Creator Portal review.
+
 ## [0.1.0] - 2026-09-19
 
 The first release: one node, one credential and seven operations — the ones a workflow actually

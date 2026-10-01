@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import packageJson from '../package.json';
 import { PlanVortexOAuth2Api } from '../credentials/PlanVortexOAuth2Api.credentials';
 import { PlanVortex } from '../nodes/PlanVortex/PlanVortex.node';
+import codex from '../nodes/PlanVortex/PlanVortex.node.json';
 import publishWorkflow from '../.github/workflows/publish.yml?raw';
 
 /**
@@ -95,6 +96,41 @@ describe('the package manifest', () => {
 	it('regenerates the error catalogue before every build', () => {
 		const scripts = manifest.scripts as Record<string, string>;
 		expect(scripts.prebuild).toContain('errors:generate');
+	});
+});
+
+/**
+ * The codex file: where the node shows up in n8n's nodes panel.
+ *
+ * This is the rule the first submission was sent back for. `"Marketing"` is not a category, and
+ * nothing anywhere says so — not the build, not n8n's lint, not its scanner. The UI drops an
+ * unknown value in silence, so the node simply did not appear under Marketing; only the reviewer
+ * noticed. The list is copied verbatim from n8n's "Codex files" reference, ampersands included.
+ */
+describe('the codex file', () => {
+	const NODE_CATEGORIES = [
+		'Data & Storage',
+		'Finance & Accounting',
+		'Marketing & Content',
+		'Productivity',
+		'Miscellaneous',
+		'Sales',
+		'Development',
+		'Analytics',
+		'Communication',
+		'Utility',
+	];
+
+	it('uses only categories the nodes panel knows', () => {
+		expect(codex.categories.length).toBeGreaterThan(0);
+		for (const category of codex.categories) {
+			expect(NODE_CATEGORIES).toContain(category);
+		}
+	});
+
+	it('names the node by the package and matches its version', () => {
+		expect(codex.node).toBe(`${packageJson.name}.planVortex`);
+		expect(Number(codex.nodeVersion)).toBe(new PlanVortex().description.version);
 	});
 });
 
