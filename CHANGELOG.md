@@ -4,6 +4,17 @@ All notable changes to `n8n-nodes-planvortex` are documented here. The format fo
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project follows
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-10-07
+
+### Changed
+
+- **The error catalogue is refreshed from the server**, and it brings a new family, `comments`
+  (2600-2699). Its only code today is 2600: a LinkedIn personal profile, which LinkedIn now lets
+  PlanVortex connect next to the pages, publishes but has no comment inbox. The failure says so
+  instead of falling back to the generic advice. The refresh also widens the ranges the node
+  already knew (auth up to 554, social accounts up to 716, publications up to 996) and adds the
+  messages of the codes that arrived with them.
+
 ## [0.1.1] - 2026-10-01
 
 ### Fixed

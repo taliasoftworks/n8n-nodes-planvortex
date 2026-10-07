@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-planvortex",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "n8n community node for PlanVortex: publish to social networks, upload media, read and reply to comments, and create account connect links.",
   "license": "MIT",
   "homepage": "https://planvortex.com/en/developers",

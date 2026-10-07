@@ -3,9 +3,9 @@
 	"ranges": [
 		{
 			"from": 500,
-			"to": 546,
+			"to": 554,
 			"family": "auth",
-			"label": "auth, tokens and client apps"
+			"label": "auth, tokens, client apps and connect sessions"
 		},
 		{
 			"from": 601,
@@ -15,7 +15,7 @@
 		},
 		{
 			"from": 700,
-			"to": 715,
+			"to": 716,
 			"family": "social_accounts",
 			"label": "social accounts"
 		},
@@ -27,7 +27,7 @@
 		},
 		{
 			"from": 900,
-			"to": 986,
+			"to": 996,
 			"family": "publications",
 			"label": "publications"
 		},
@@ -96,13 +96,20 @@
 			"to": 2299,
 			"family": "integrations",
 			"label": "integrations"
+		},
+		{
+			"from": 2600,
+			"to": 2699,
+			"family": "comments",
+			"label": "comments, the ones that no longer fit in 945-948"
 		}
 	],
 	"rateLimited": [
 		545,
 		926,
 		978,
-		979
+		979,
+		991
 	],
 	"codes": [
 		{
@@ -300,6 +307,30 @@
 		{
 			"code": 548,
 			"message": "Error regenerating the client secret in keycloak"
+		},
+		{
+			"code": 549,
+			"message": "Invalid account_selection: integrator selection needs a redirect_uri and a social_network"
+		},
+		{
+			"code": 550,
+			"message": "This social network has no return to the browser, so its accounts cannot be selected by the integrator"
+		},
+		{
+			"code": 551,
+			"message": "Connect session not found or expired"
+		},
+		{
+			"code": 552,
+			"message": "Connect session is not ready to be confirmed"
+		},
+		{
+			"code": 553,
+			"message": "Account is not part of this connect session"
+		},
+		{
+			"code": 554,
+			"message": "This connect token is for integrator account selection, it cannot connect through the hosted flow"
 		},
 		{
 			"code": 601,
@@ -815,6 +846,60 @@
 			"message": "Slack rejected the file upload"
 		},
 		{
+			"code": 987,
+			"message": "A Pinterest publication needs a destination board"
+		},
+		{
+			"code": 988,
+			"message": "This Pinterest account is not a business account, analytics will not work"
+		},
+		{
+			"code": 989,
+			"message": "The Pinterest video did not finish processing"
+		},
+		{
+			"code": 990,
+			"message": "A Pinterest carousel needs between 2 and ",
+			"dynamic": true
+		},
+		{
+			"code": 991,
+			"message": "Pinterest is rate limiting this application, try again shortly"
+		},
+		{
+			"code": 992,
+			"message": "This social network has no destinations: the account itself is where publications go"
+		},
+		{
+			"code": 993,
+			"message": "Destination not found in this account"
+		},
+		{
+			"code": 994,
+			"message": "The publication link is not a valid http(s) URL"
+		},
+		{
+			"code": 995,
+			"message": "Pinterest title or description too long: max ",
+			"dynamic": true
+		},
+		{
+			"code": 996,
+			"message": "File too large for Pinterest"
+		},
+		{
+			"code": 997,
+			"message": "Who can reply is not one of the values this network accepts"
+		},
+		{
+			"code": 998,
+			"message": "Instagram rejected the media while processing it"
+		},
+		{
+			"code": 999,
+			"message": "Instagram did not finish processing the media in time"
+		},
+		{
 			"code": 1000,
 			"message": "Invalid from_date"
 		},
@@ -1142,6 +1227,18 @@
 			"message": "Some source items did not fit in the plan week"
 		},
 		{
+			"code": 2118,
+			"message": "An account of the AI plan needs a destination (Pinterest board)"
+		},
+		{
+			"code": 2119,
+			"message": "The AI plan would leave publications that require an image without one"
+		},
+		{
+			"code": 2120,
+			"message": "An account of the AI plan is on a social network this planner template cannot publish to"
+		},
+		{
 			"code": 2200,
 			"message": "Integration not found"
 		},
@@ -1168,6 +1265,82 @@
 		{
 			"code": 2206,
 			"message": "Feed has no target accounts configured"
+		},
+		{
+			"code": 2207,
+			"message": "This integration has no product catalog"
+		},
+		{
+			"code": 2208,
+			"message": "Could not read the product catalog of the integration"
+		},
+		{
+			"code": 2209,
+			"message": "Integration is disabled"
+		},
+		{
+			"code": 2210,
+			"message": "The store URL cannot be used: it must be a public https:// address that does not redirect"
+		},
+		{
+			"code": 2211,
+			"message": "The store rejected the API key"
+		},
+		{
+			"code": 2212,
+			"message": "A firewall or security plugin in front of the store blocked the request"
+		},
+		{
+			"code": 2213,
+			"message": "The store could not be reached or did not answer properly"
+		},
+		{
+			"code": 2214,
+			"message": "No WooCommerce REST API found at this URL"
+		},
+		{
+			"code": 2215,
+			"message": "WooCommerce API keys are missing or malformed"
+		},
+		{
+			"code": 2216,
+			"message": "This store cannot be connected with the WooCommerce button: connect it with API keys"
+		},
+		{
+			"code": 2217,
+			"message": "The WooCommerce connection link has expired or was already used"
+		},
+		{
+			"code": 2218,
+			"message": "The store granted permissions other than read-only"
+		},
+		{
+			"code": 2219,
+			"message": "The store connection is still being checked"
+		},
+		{
+			"code": 2220,
+			"message": "This integration setting cannot be edited: reconnect the integration to change it"
+		},
+		{
+			"code": 2300,
+			"message": "Notification not found"
+		},
+		{
+			"code": 2400,
+			"message": "YouTube received the video but did not apply the requested visibility: finish it in YouTube Studio"
+		},
+		{
+			"code": 2500,
+			"message": "Visibility is not one of the values this network accepts"
+		},
+		{
+			"code": 2501,
+			"message": "made_for_kids must be true or false"
+		},
+		{
+			"code": 2600,
+			"message": "This account has no comment inbox, although its social network has one"
 		}
 	]
 }

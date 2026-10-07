@@ -162,6 +162,10 @@ const FAMILY_ADVICE: Record<PlanVortexErrorFamily, string> = {
 		"This is about an AI content plan, which this node does not create. The message above is the API's own.",
 	integrations:
 		'The integration is not usable. Connecting or repairing one is done by a person in the PlanVortex panel.',
+	// 2600-2699, the comment codes that no longer fit in 945-948. Today only 2600: a LinkedIn
+	// personal profile, which publishes but has no comment inbox.
+	comments:
+		'There are no comments to read here. On LinkedIn only pages have a comment inbox: a personal profile publishes, but LinkedIn does not let any app read its comments. Retrying will fail the same way.',
 };
 
 /** Said about the four codes the API answers with a 429, whatever family they sit in. */
