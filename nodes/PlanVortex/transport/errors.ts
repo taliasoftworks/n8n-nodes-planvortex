@@ -110,6 +110,9 @@ const CODE_ADVICE: Partial<Record<PlanVortexErrorCode, Advice>> = {
 	980: 'The PlanVortex app is not in that Slack channel, and nothing about the post is wrong. Somebody with access has to type `/invite @PlanVortex` inside the channel — on a private channel that is the only way, because Slack has no API for an app to join one.',
 	984: 'Slack is rate limiting this workspace and the retry window ran out. It is temporary and it has nothing to do with the post, but Slack counts per workspace, so other channels of the same workspace will hit it too. Space the messages out or schedule them.',
 	985: 'That Slack channel is archived or no longer exists, so nothing can be published to it. Somebody has to unarchive it, or the account has to be reconnected to a different channel.',
+	987: 'A Pinterest pin goes to a board, and this one came without it. Pick the board in Additional Fields > Destination: the list is read from the account itself.',
+	992: "That account's network has no destinations: the account itself is where its posts go. Only Pinterest takes a Destination, so leave it out for this one.",
+	994: 'The Link is not a valid http(s) URL, or it is too long. Pinterest would reject it at publishing time, so PlanVortex stops it now instead.',
 
 	// ── Organizations ────────────────────────────────────────────────────────────────────────
 	1101: 'That organization does not exist. Pick one from the Organization dropdown, which lists exactly the organizations this credential reaches.',

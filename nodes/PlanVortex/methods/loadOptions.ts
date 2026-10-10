@@ -63,7 +63,7 @@ export async function getAccounts(this: ILoadOptionsFunctions): Promise<INodePro
 /**
  * The same list, minus the networks that do not publish.
  *
- * Two of the thirteen are connectable and never accept a post: WhatsApp has no feed and Google
+ * Two of the networks are connectable and never accept a post: WhatsApp has no feed and Google
  * Business is a listing that receives reviews. `capability` applies the matrix of
  * `GET /social_capabilities` server-side, so this node keeps no table of its own about which
  * network does what — the thing that goes stale the day a network is added.
@@ -95,6 +95,43 @@ async function loadAccounts(
 			name: `${String(account.name ?? account._id)} (${networkLabel(String(account.social_network ?? ''))})`,
 			value: String(account._id),
 		})),
+	);
+}
+
+/**
+ * The places inside the account picked above where a post can go.
+ *
+ * On almost every network choosing the account already says where the post comes out. Pinterest
+ * is the exception: a pin goes to a BOARD, picked per post, and without one the API stores the
+ * publication in `withErrors` with error 987. The list is the account's boards as the server
+ * reads them, and a secret board says so in its label, because a pin there is seen by nobody else.
+ *
+ * Asked of an account whose network has no destinations, the server answers error 992, and the
+ * dropdown shows it: that message is the explanation, an empty list would not be.
+ */
+export async function getDestinations(
+	this: ILoadOptionsFunctions,
+): Promise<INodePropertyOptions[]> {
+	const organizationId = String(this.getCurrentNodeParameter('organizationId') ?? '').trim();
+	const accountId = String(this.getCurrentNodeParameter('accountId') ?? '').trim();
+	// The same honest empty list as the account dropdowns, for the same reason.
+	if (organizationId === '' || accountId === '') return [];
+
+	const response = (await planVortexApiRequest.call(
+		this,
+		'GET',
+		`/organizations/${organizationId}/accounts/${accountId}/destinations`,
+	)) as { destinations?: IDataObject[] };
+
+	return sorted(
+		(response?.destinations ?? []).map((destination) => {
+			const name = String(destination.name ?? destination.id);
+			return {
+				name: destination.privacy === 'SECRET' ? `${name} (secret)` : name,
+				// Always a string: a Pinterest board id has 18 digits and does not survive a number.
+				value: String(destination.id),
+			};
+		}),
 	);
 }
 

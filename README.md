@@ -1,36 +1,33 @@
 # n8n-nodes-planvortex
 
-An n8n community node for [PlanVortex](https://planvortex.com/en). It lets an n8n workflow publish
-to social networks, upload media, read and reply to comments, and hand a client a link to connect
-their own accounts.
+An n8n community node for [PlanVortex](https://planvortex.com/en), verified by n8n. It lets an n8n
+workflow publish to social networks, upload media, read and reply to comments, and hand a client a
+link to connect their own accounts.
 
-PlanVortex manages thirteen social networks from one API — Facebook, Instagram, Threads, LinkedIn,
-TikTok, X, WhatsApp, YouTube, Google Business, Bluesky, Discord, Telegram and Slack. The ones worth
-naming here are the last three: announcing a release on LinkedIn, dropping it in a customer Discord
-and posting it to an internal Slack channel is normally three separate integrations.
+PlanVortex manages social networks from one API, among them Facebook, Instagram, Threads,
+LinkedIn, TikTok, X, YouTube, Bluesky, Pinterest, Discord, Telegram and Slack. The ones worth
+naming here are the last three: announcing a release on LinkedIn, dropping it in a customer
+Discord and posting it to an internal Slack channel is normally three separate integrations.
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/sustainable-use-license/)
 workflow automation platform.
 
-> **Status: verification by n8n pending.** Until n8n verifies this node it can be installed on a
-> **self-hosted** n8n only, not on n8n Cloud. On Cloud, in the meantime, PlanVortex works through
-> the `HTTP Request` node against the [REST API](https://planvortex.com/en/developers).
-
 ## Installation
+
+**n8n Cloud:** this is a verified community node, so it installs from the nodes panel: search for
+**PlanVortex** and install it. Only the instance **owner or an admin** can do that; nobody else on
+the instance can.
 
 **Self-hosted n8n:** go to **Settings → Community Nodes**, choose **Install** and enter
 `n8n-nodes-planvortex`. The [installation
 guide](https://docs.n8n.io/integrations/community-nodes/installation/) covers the other ways,
 including the command line.
 
-**n8n Cloud:** once n8n has verified the node, the instance **owner or an admin** installs it from
-the nodes panel. Nobody else on the instance can.
-
 ## Operations
 
 | Resource | Operation | What it does |
 | --- | --- | --- |
-| Publication | Create | Publishes now or schedules a post on one connected account |
+| Publication | Create | Publishes now or schedules a post on one connected account, a Pinterest pin with its board and link included |
 | Media | Upload | Puts an image or a video in the organization's library, ready to attach |
 | Account | Get Many | Lists the connected accounts, with a filter for what their network can do |
 | Account | Create Connect Link | Mints a single-use link for a person to connect one of their own accounts |
@@ -45,7 +42,7 @@ Seven operations, not one hundred and thirty-five. Anything else the API does is
 node away, using the same credential — see the [PlanVortex API
 documentation](https://planvortex.com/en/developers).
 
-Four things are worth knowing before you build on them:
+Five things are worth knowing before you build on them:
 
 - **Connecting a social account cannot be automated.** It is an OAuth flow with a person clicking
   "authorize" on the network's own screen, and app credentials are refused outright. *Create
@@ -55,10 +52,14 @@ Four things are worth knowing before you build on them:
   inside it, and answers 200 — so a workflow that only watches for exceptions would report a post
   that never went out as sent. *Create* has a **Fail on Publication Errors** toggle, on by default,
   that turns it into a real failure.
-- **Not every network does everything.** Google Business receives reviews and never publishes,
-  WhatsApp has no feed, Slack publishes and has no comment inbox at all. *Get Capabilities* is how
-  a workflow finds that out once instead of one network at a time, in production. The account
-  dropdown for publishing already hides the accounts that cannot publish.
+- **Not every network does everything.** WhatsApp has no feed, and Slack and Pinterest publish
+  but have no comment inbox. *Get Capabilities* is how a workflow finds that out once instead of
+  one network at a time, in production. The account dropdown for publishing already hides the
+  accounts that cannot publish.
+- **On Pinterest, a pin goes to a board.** Choosing the account does not choose where the pin
+  comes out, so *Create* has a **Destination** field (in Additional Fields) listing the account's
+  boards, and a pin without one fails with error 987. The URL the pin leads to goes in **Link**,
+  not in the text. Every other network ignores both fields.
 - **Comments and replies need a paid plan.** The rest of this node works on the free one.
 
 ## Credentials

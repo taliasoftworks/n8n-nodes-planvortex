@@ -112,6 +112,80 @@ describe('publication: create', () => {
 	});
 
 	/**
+	 * Pinterest is the network where choosing the account does not choose where the post comes
+	 * out: every pin goes to a board, and the API takes it as an object. A bare id there is a
+	 * publication stored with error 987.
+	 */
+	it('sends the board as a destination object, with its section when there is one', async () => {
+		const pinterest = { _id: ACCOUNT, social_network: 'pinterest', name: 'PlanVortex' };
+		const { context, requests } = createExecuteContext({
+			parameters: {
+				organizationId: ORGANIZATION,
+				accountId: ACCOUNT,
+				text: 'Washed linen that breathes.',
+				fileIds: 'f1',
+				additionalFields: {
+					title: 'Linen shirt',
+					destinationId: '1091982309590636280',
+					destinationSectionId: ' 5051 ',
+					link: ' https://example.com/linen ',
+				},
+			},
+			respond: [{ account: pinterest }, { publication: {} }],
+		});
+
+		await createPublication.call(context, 0, newRunState());
+
+		const body = requests[1].body as IDataObject;
+		// An 18-digit board id stays a string end to end: as a number it would be another board.
+		expect(body.destination).toEqual({ id: '1091982309590636280', section_id: '5051' });
+		expect(body.link).toBe('https://example.com/linen');
+		expect(body.title).toBe('Linen shirt');
+		// The node's own names for the fields never reach the API.
+		expect(body).not.toHaveProperty('destinationId');
+		expect(body).not.toHaveProperty('destinationSectionId');
+	});
+
+	it('sends no destination and no link when the workflow left them empty', async () => {
+		const { context, requests } = createExecuteContext({
+			parameters: {
+				organizationId: ORGANIZATION,
+				accountId: ACCOUNT,
+				text: 'Hello',
+				additionalFields: { destinationId: '', destinationSectionId: '', link: '  ' },
+			},
+			respond: [{ account }, { publication: {} }],
+		});
+
+		await createPublication.call(context, 0, newRunState());
+
+		const body = requests[1].body as IDataObject;
+		expect(body).not.toHaveProperty('destination');
+		expect(body).not.toHaveProperty('link');
+	});
+
+	/**
+	 * The API would read a section with no board as a destination with an empty id and answer
+	 * 987 about the board, when what is wrong is that only half of it was filled in.
+	 */
+	it('refuses a section without its board, before spending a request on it', async () => {
+		const { context, requests } = createExecuteContext({
+			parameters: {
+				organizationId: ORGANIZATION,
+				accountId: ACCOUNT,
+				text: 'Hello',
+				additionalFields: { destinationSectionId: '5051' },
+			},
+			respond: [],
+		});
+
+		await expect(createPublication.call(context, 0, newRunState())).rejects.toThrow(
+			NodeOperationError,
+		);
+		expect(requests).toHaveLength(0);
+	});
+
+	/**
 	 * The silence this operation exists to break. Invalid content is not rejected: the
 	 * publication is stored in state `withErrors` with the reasons inside it and the API answers
 	 * 200, so a workflow that only watches for exceptions reports a post that never went out as

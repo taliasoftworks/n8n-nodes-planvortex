@@ -1,5 +1,5 @@
-import type { IDataObject, INodeProperties, JsonObject } from 'n8n-workflow';
-import { NodeApiError } from 'n8n-workflow';
+import type { IDataObject, IExecuteFunctions, INodeProperties, JsonObject } from 'n8n-workflow';
+import { NodeApiError, NodeOperationError } from 'n8n-workflow';
 import { planVortexApiRequest } from '../../transport';
 import { describeApiError } from '../../transport/errors';
 import {
@@ -67,12 +67,40 @@ export const publicationCreateDescription: INodeProperties[] = [
 		displayOptions: { show: showOnlyForPublicationCreate },
 		options: [
 			{
+				displayName: 'Destination Name or ID',
+				name: 'destinationId',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getDestinations',
+					loadOptionsDependsOn: ['organizationId', 'accountId'],
+				},
+				default: '',
+				description: 'Where the post goes inside the account, on the networks where the account alone does not say. Required on Pinterest, where it is the board; every other network ignores it. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+			},
+			{
+				displayName: 'Destination Section ID',
+				name: 'destinationSectionId',
+				type: 'string',
+				default: '',
+				description:
+					'Optional, and Pinterest only: the section of the board picked in Destination. GET /organizations/{ID}/accounts/{ID}/destinations/{board} lists the sections of a board.',
+			},
+			{
 				displayName: 'Internal Name',
 				name: 'name',
 				type: 'string',
 				default: '',
 				description:
 					'A label for your own use. It is never shown on the social network; it is there to group publications.',
+			},
+			{
+				displayName: 'Link',
+				name: 'link',
+				type: 'string',
+				default: '',
+				placeholder: 'https://example.com/product',
+				description:
+					"Where the post leads when someone opens it. Only Pinterest has this field, as the pin's destination link, and every other network ignores it: there, a link goes inside the text.",
 			},
 			{
 				displayName: 'Publication Type',
@@ -121,6 +149,38 @@ export const publicationCreateDescription: INodeProperties[] = [
 ];
 
 /**
+ * The board, in the shape the API takes: an object, `{ id, section_id? }`, never a bare id.
+ *
+ * Nothing is sent when no board was picked. On Pinterest the API then stores the publication
+ * with error 987, which is the right answer and the one the person can act on; on every other
+ * network there is nothing to send. A section without its board is refused here, before the
+ * request: the API would read it as a destination with an empty id and answer the same 987,
+ * which names the board when what is wrong is the order the fields were filled in.
+ */
+function buildDestination(
+	context: IExecuteFunctions,
+	index: number,
+	destinationId: string,
+	sectionId: string,
+): IDataObject | undefined {
+	const board = destinationId.trim();
+	const section = sectionId.trim();
+
+	if (board === '') {
+		if (section !== '') {
+			throw new NodeOperationError(context.getNode(), 'A section was given without its board', {
+				itemIndex: index,
+				description:
+					'A section belongs to a board. Pick the board in Destination as well, or leave Destination Section ID empty.',
+			});
+		}
+		return undefined;
+	}
+
+	return section === '' ? { id: board } : { id: board, section_id: section };
+}
+
+/**
  * Create a publication.
  *
  * Two things here are not obvious from the endpoint.
@@ -154,6 +214,20 @@ export const createPublication: OperationHandler = async function (this, index, 
 	) as boolean;
 	const additionalFields = this.getNodeParameter('additionalFields', index, {}) as IDataObject;
 
+	const {
+		destinationId = '',
+		destinationSectionId = '',
+		link = '',
+		...fields
+	} = additionalFields;
+	const destination = buildDestination(
+		this,
+		index,
+		String(destinationId),
+		String(destinationSectionId),
+	);
+	const trimmedLink = String(link).trim();
+
 	const account = await getAccountOnce(this, index, organizationId, accountId, run);
 	const files = splitIds(fileIds);
 
@@ -161,7 +235,9 @@ export const createPublication: OperationHandler = async function (this, index, 
 		social_network: account.social_network,
 		...(text === '' ? {} : { text }),
 		...(files.length > 0 ? { files } : {}),
-		...additionalFields,
+		...fields,
+		...(destination ? { destination } : {}),
+		...(trimmedLink === '' ? {} : { link: trimmedLink }),
 	};
 
 	const response = (await planVortexApiRequest.call(

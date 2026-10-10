@@ -11,6 +11,7 @@ import {
 import {
 	getAccounts as loadAccountOptions,
 	getCommentNetworks,
+	getDestinations,
 	getOrganizations,
 	getPublishingAccounts,
 	getSocialNetworks,
@@ -124,6 +125,7 @@ export class PlanVortex implements INodeType {
 		loadOptions: {
 			getAccounts: loadAccountOptions,
 			getCommentNetworks,
+			getDestinations,
 			getOrganizations,
 			getPublishingAccounts,
 			getSocialNetworks,

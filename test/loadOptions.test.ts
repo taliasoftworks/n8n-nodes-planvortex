@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	getAccounts,
 	getCommentNetworks,
+	getDestinations,
 	getOrganizations,
 	getPublishingAccounts,
 	getSocialNetworks,
@@ -123,6 +124,46 @@ describe('the account dropdowns', () => {
 
 		expect(requests[0].url).toBe(`${BASE_URL}/organizations/${ORGANIZATION}/accounts`);
 		expect(requests[0].qs).toMatchObject({ capability: 'publications' });
+	});
+});
+
+describe('the destination dropdown', () => {
+	const ACCOUNT = '507f191e810c19729de860ea';
+
+	it('answers an empty list, and asks nothing, before an account is chosen', async () => {
+		const { context, requests } = createLoadOptionsContext({
+			currentParameters: { organizationId: ORGANIZATION },
+		});
+
+		expect(await getDestinations.call(context)).toEqual([]);
+		expect(requests).toHaveLength(0);
+	});
+
+	/**
+	 * A pin on a secret board is seen by nobody else, and the board's name does not say so.
+	 */
+	it("lists the account's boards and says which ones are secret", async () => {
+		const { context, requests } = createLoadOptionsContext({
+			currentParameters: { organizationId: ORGANIZATION, accountId: ACCOUNT },
+			respond: [
+				{
+					destinations: [
+						{ id: '1091982309590636280', name: 'Recipes', privacy: 'PUBLIC' },
+						{ id: '1091982309590636281', name: 'Drafts', privacy: 'SECRET' },
+					],
+				},
+			],
+		});
+
+		const options = await getDestinations.call(context);
+
+		expect(requests[0].url).toBe(
+			`${BASE_URL}/organizations/${ORGANIZATION}/accounts/${ACCOUNT}/destinations`,
+		);
+		expect(options).toEqual([
+			{ name: 'Drafts (secret)', value: '1091982309590636281' },
+			{ name: 'Recipes', value: '1091982309590636280' },
+		]);
 	});
 });
 

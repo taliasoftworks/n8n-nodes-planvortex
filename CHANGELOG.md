@@ -4,6 +4,23 @@ All notable changes to `n8n-nodes-planvortex` are documented here. The format fo
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project follows
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-10-10
+
+### Added
+
+- **Pinterest pins.** *Publication → Create* has three new optional fields under Additional
+  Fields: **Destination**, a dropdown of the account's boards read from the API (a secret board
+  says so in its label); **Destination Section ID**, for a section of that board; and **Link**,
+  the URL the pin leads to. Pinterest requires the board, so until now a pin created from n8n was
+  stored with error 987 and never went out. Every other network ignores the three fields.
+- **Advice for the three errors those fields can bring**: 987 (a pin without a board), 992 (a
+  Destination on a network that has none) and 994 (a Link that is not an http(s) URL).
+
+### Changed
+
+- **The README reflects the verification.** Installing from the nodes panel of n8n Cloud comes
+  first, the "verification pending" notice is gone, and Pinterest is in the list of networks.
+
 ## [0.1.2] - 2026-10-07
 
 ### Changed
