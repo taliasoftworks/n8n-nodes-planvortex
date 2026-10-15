@@ -56,6 +56,12 @@ Five things are worth knowing before you build on them:
   but have no comment inbox. *Get Capabilities* is how a workflow finds that out once instead of
   one network at a time, in production. The account dropdown for publishing already hides the
   accounts that cannot publish.
+- **On TikTok, a person chooses who sees the post.** TikTok's content sharing guidelines forbid
+  a default, so *Create* has a **Visibility** field and the boxes **Allow Comments**, **Allow
+  Duet**, **Allow Stitch**, **Promotes Own Brand** and **Branded Content** (all in Additional
+  Fields). Which visibilities an account allows depends on the account: a private one has
+  Followers instead of Public, and a value it does not allow fails with error 2505 listing the
+  ones it does. A paid partnership cannot be private (error 2504).
 - **On Pinterest, a pin goes to a board.** Choosing the account does not choose where the pin
   comes out, so *Create* has a **Destination** field (in Additional Fields) listing the account's
   boards, and a pin without one fails with error 987. The URL the pin leads to goes in **Link**,

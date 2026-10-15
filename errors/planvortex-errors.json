@@ -98,6 +98,12 @@
 			"label": "integrations"
 		},
 		{
+			"from": 2500,
+			"to": 2599,
+			"family": "publication_fields",
+			"label": "publication fields, the ones that no longer fit in 900-996 (visibility, made for kids, TikTok's interactions and commercial content)"
+		},
+		{
 			"from": 2600,
 			"to": 2699,
 			"family": "comments",
@@ -1151,6 +1157,18 @@
 			"message": "Client already has an active subscription, manage it from the billing portal"
 		},
 		{
+			"code": 1907,
+			"message": "An annual subscription can only switch to monthly billing when it renews"
+		},
+		{
+			"code": 1908,
+			"message": "The payment page could not be opened"
+		},
+		{
+			"code": 1909,
+			"message": "The plan change could not be charged, the plan has not changed"
+		},
+		{
 			"code": 2000,
 			"message": "Invalid product_catalog_id or id_product, this social network requires a valid product_catalog_id"
 		},
@@ -1337,6 +1355,34 @@
 		{
 			"code": 2501,
 			"message": "made_for_kids must be true or false"
+		},
+		{
+			"code": 2502,
+			"message": "interactions must only contain these keys, each true or false"
+		},
+		{
+			"code": 2503,
+			"message": "commercial_content must only contain your_brand and branded_content, each true or false"
+		},
+		{
+			"code": 2504,
+			"message": "Branded content cannot be private: make it public or visible to friends"
+		},
+		{
+			"code": 2505,
+			"message": "This account cannot publish with that visibility right now"
+		},
+		{
+			"code": 2506,
+			"message": "The video is longer than this account is allowed to publish"
+		},
+		{
+			"code": 2507,
+			"message": "The social network does not let this account publish right now, try again later"
+		},
+		{
+			"code": 2508,
+			"message": "This social network has no publish settings to read"
 		},
 		{
 			"code": 2600,

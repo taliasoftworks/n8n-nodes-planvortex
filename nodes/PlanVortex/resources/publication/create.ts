@@ -67,6 +67,38 @@ export const publicationCreateDescription: INodeProperties[] = [
 		displayOptions: { show: showOnlyForPublicationCreate },
 		options: [
 			{
+				displayName: 'Allow Comments',
+				name: 'allowComments',
+				type: 'boolean',
+				default: false,
+				description:
+					"Whether the audience can comment. TikTok only: TikTok's content sharing guidelines ask that a person decides it, so add it and leave it off unless they said yes. Left out, TikTok's default applies (allowed). If the creator turned comments off in the TikTok app, they stay off.",
+			},
+			{
+				displayName: 'Allow Duet',
+				name: 'allowDuet',
+				type: 'boolean',
+				default: false,
+				description:
+					'Whether the audience can make a Duet with the video. TikTok videos only; ignored on photo posts and on every other network.',
+			},
+			{
+				displayName: 'Allow Stitch',
+				name: 'allowStitch',
+				type: 'boolean',
+				default: false,
+				description:
+					'Whether the audience can make a Stitch with the video. TikTok videos only; ignored on photo posts and on every other network.',
+			},
+			{
+				displayName: 'Branded Content',
+				name: 'brandedContent',
+				type: 'boolean',
+				default: false,
+				description:
+					'Whether the post is a paid partnership promoting a third party. TikTok only: it is labeled "Paid partnership", and it cannot be private (Visibility must be Public or Friends, or the publication is stored with error 2504).',
+			},
+			{
 				displayName: 'Destination Name or ID',
 				name: 'destinationId',
 				type: 'options',
@@ -101,6 +133,22 @@ export const publicationCreateDescription: INodeProperties[] = [
 				placeholder: 'https://example.com/product',
 				description:
 					"Where the post leads when someone opens it. Only Pinterest has this field, as the pin's destination link, and every other network ignores it: there, a link goes inside the text.",
+			},
+			{
+				displayName: 'Made for Kids',
+				name: 'made_for_kids',
+				type: 'boolean',
+				default: false,
+				description:
+					'Whether the video is made for kids (COPPA). YouTube only, and the law makes it the channel owner\'s call: a video directed at children has to be uploaded with this on. Every other network ignores it.',
+			},
+			{
+				displayName: 'Promotes Own Brand',
+				name: 'yourBrand',
+				type: 'boolean',
+				default: false,
+				description:
+					'Whether the post promotes the creator or their own business. TikTok only: it is labeled "Promotional content". Every other network ignores it.',
 			},
 			{
 				displayName: 'Publication Type',
@@ -144,6 +192,21 @@ export const publicationCreateDescription: INodeProperties[] = [
 				description:
 					'Only some networks have a title field: it is optional on LinkedIn and required on YouTube, where it is the video title and cannot exceed 100 characters',
 			},
+			{
+				displayName: 'Visibility',
+				name: 'visibility',
+				type: 'options',
+				default: 'public',
+				options: [
+					{ name: 'Followers (TikTok, Private Accounts)', value: 'followers' },
+					{ name: 'Friends (TikTok)', value: 'friends' },
+					{ name: 'Only Me', value: 'private' },
+					{ name: 'Public', value: 'public' },
+					{ name: 'Unlisted (YouTube)', value: 'unlisted' },
+				],
+				description:
+					"Who can see the post. YouTube and TikTok only; every other network ignores it. On TikTok it should be a person's choice (its content sharing guidelines forbid a default), and which values an account allows depends on the account: a private one has Followers instead of Public. A value the account does not allow when the post goes out stores it with error 2505 and the values it does allow.",
+			},
 		],
 	},
 ];
@@ -178,6 +241,31 @@ function buildDestination(
 	}
 
 	return section === '' ? { id: board } : { id: board, section_id: section };
+}
+
+/**
+ * TikTok's interactions, in the shape the API takes: `{ comments, duet, stitch }`.
+ *
+ * Only the ones the workflow added travel: a key that is missing is the network's default, which
+ * is not the same as `false`. Nothing at all is sent when none was added, which is what every
+ * network but TikTok wants (there the API deletes the field anyway).
+ */
+function buildInteractions(comments: unknown, duet: unknown, stitch: unknown): IDataObject | undefined {
+	const chosen: IDataObject = {};
+	if (typeof comments === 'boolean') chosen.comments = comments;
+	if (typeof duet === 'boolean') chosen.duet = duet;
+	if (typeof stitch === 'boolean') chosen.stitch = stitch;
+	return Object.keys(chosen).length > 0 ? chosen : undefined;
+}
+
+/**
+ * The commercial content disclosure, `{ your_brand, branded_content }`, sent only when one of the
+ * two was added. Both travel together: the API reads the pair, and an object with only one of them
+ * would leave the other to a default the person never saw.
+ */
+function buildCommercialContent(yourBrand: unknown, brandedContent: unknown): IDataObject | undefined {
+	if (typeof yourBrand !== 'boolean' && typeof brandedContent !== 'boolean') return undefined;
+	return { your_brand: yourBrand === true, branded_content: brandedContent === true };
 }
 
 /**
@@ -218,8 +306,15 @@ export const createPublication: OperationHandler = async function (this, index, 
 		destinationId = '',
 		destinationSectionId = '',
 		link = '',
+		allowComments,
+		allowDuet,
+		allowStitch,
+		yourBrand,
+		brandedContent,
 		...fields
 	} = additionalFields;
+	const interactions = buildInteractions(allowComments, allowDuet, allowStitch);
+	const commercialContent = buildCommercialContent(yourBrand, brandedContent);
 	const destination = buildDestination(
 		this,
 		index,
@@ -238,6 +333,8 @@ export const createPublication: OperationHandler = async function (this, index, 
 		...fields,
 		...(destination ? { destination } : {}),
 		...(trimmedLink === '' ? {} : { link: trimmedLink }),
+		...(interactions ? { interactions } : {}),
+		...(commercialContent ? { commercial_content: commercialContent } : {}),
 	};
 
 	const response = (await planVortexApiRequest.call(

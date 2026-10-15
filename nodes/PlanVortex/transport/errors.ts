@@ -114,6 +114,13 @@ const CODE_ADVICE: Partial<Record<PlanVortexErrorCode, Advice>> = {
 	992: "That account's network has no destinations: the account itself is where its posts go. Only Pinterest takes a Destination, so leave it out for this one.",
 	994: 'The Link is not a valid http(s) URL, or it is too long. Pinterest would reject it at publishing time, so PlanVortex stops it now instead.',
 
+	// ── Publication settings: who sees it, and what TikTok asks to be chosen ────────────────────
+	2500: 'That Visibility is not one this network has. Unlisted is YouTube only; Friends and Followers are TikTok only.',
+	2504: 'A paid partnership (Branded Content) cannot be private on TikTok. Set Visibility to Public or Friends, or turn Branded Content off.',
+	2505: 'This TikTok account no longer allows the chosen Visibility (it may have gone from public to private since the post was scheduled). The message lists the ones it allows; PlanVortex never swaps it for another.',
+	2506: 'The video is longer than this TikTok account is allowed to post. Trim it, or post it from an account that allows longer videos.',
+	2507: 'TikTok is not taking posts from this account right now, usually because it hit its daily posting limit. It is temporary: schedule the post for later.',
+
 	// ── Organizations ────────────────────────────────────────────────────────────────────────
 	1101: 'That organization does not exist. Pick one from the Organization dropdown, which lists exactly the organizations this credential reaches.',
 	1110: 'That organization has been deleted. Pick another one from the Organization dropdown.',
@@ -165,6 +172,11 @@ const FAMILY_ADVICE: Record<PlanVortexErrorFamily, string> = {
 		"This is about an AI content plan, which this node does not create. The message above is the API's own.",
 	integrations:
 		'The integration is not usable. Connecting or repairing one is done by a person in the PlanVortex panel.',
+	// 2500-2599, the publication fields that no longer fit in 900-996: who can see the post, made
+	// for kids, and what TikTok asks to be chosen (interactions, commercial content). Most of them
+	// arrive inside a publication stored with errors; 2505-2507 when TikTok refuses at publish time.
+	publication_fields:
+		'One of the publication settings was rejected: who can see it, whether it is made for kids, what the audience can do with it, or whether it is commercial content. The message above says which one and what the account allows. Sending it again unchanged will fail the same way.',
 	// 2600-2699, the comment codes that no longer fit in 945-948. Today only 2600: a LinkedIn
 	// personal profile, which publishes but has no comment inbox.
 	comments:

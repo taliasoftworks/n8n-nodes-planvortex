@@ -146,6 +146,54 @@ describe('publication: create', () => {
 		expect(body).not.toHaveProperty('destinationSectionId');
 	});
 
+	it("sends TikTok's settings in the shape the API takes, and only the ones the workflow added", async () => {
+		const tiktok = { _id: ACCOUNT, social_network: 'tiktok', name: 'Nordwind Café' };
+		const { context, requests } = createExecuteContext({
+			parameters: {
+				organizationId: ORGANIZATION,
+				accountId: ACCOUNT,
+				text: 'Twelve hours cold.',
+				fileIds: 'v1',
+				additionalFields: {
+					visibility: 'friends',
+					allowComments: true,
+					allowDuet: false,
+					brandedContent: true,
+				},
+			},
+			respond: [{ account: tiktok }, { publication: {} }],
+		});
+
+		await createPublication.call(context, 0, newRunState());
+
+		const body = requests[1].body as IDataObject;
+		expect(body.visibility).toBe('friends');
+		// Stitch was not added, so it is TikTok's default and not a false the person never chose.
+		expect(body.interactions).toEqual({ comments: true, duet: false });
+		expect(body.commercial_content).toEqual({ your_brand: false, branded_content: true });
+		expect(body).not.toHaveProperty('allowComments');
+		expect(body).not.toHaveProperty('brandedContent');
+	});
+
+	it('sends no interactions and no commercial content when the workflow added neither', async () => {
+		const { context, requests } = createExecuteContext({
+			parameters: {
+				organizationId: ORGANIZATION,
+				accountId: ACCOUNT,
+				text: 'Hello',
+				additionalFields: { made_for_kids: false },
+			},
+			respond: [{ account }, { publication: {} }],
+		});
+
+		await createPublication.call(context, 0, newRunState());
+
+		const body = requests[1].body as IDataObject;
+		expect(body).not.toHaveProperty('interactions');
+		expect(body).not.toHaveProperty('commercial_content');
+		expect(body.made_for_kids).toBe(false);
+	});
+
 	it('sends no destination and no link when the workflow left them empty', async () => {
 		const { context, requests } = createExecuteContext({
 			parameters: {

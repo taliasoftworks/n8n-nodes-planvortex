@@ -4,6 +4,24 @@ All notable changes to `n8n-nodes-planvortex` are documented here. The format fo
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project follows
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-10-15
+
+### Added
+
+- **TikTok's posting settings.** *Publication → Create* has five new optional fields under
+  Additional Fields: **Visibility** (who can see the post: Public, Friends, Followers, Only Me, and
+  Unlisted on YouTube), **Allow Comments**, **Allow Duet** and **Allow Stitch**, and the commercial
+  content disclosure, **Promotes Own Brand** ("Promotional content") and **Branded Content**
+  ("Paid partnership"). TikTok's content sharing guidelines ask that a person makes these choices,
+  with nothing preselected; a box that was never added is left to TikTok's default rather than
+  sent as off. Every other network ignores them, except Visibility on YouTube.
+- **Made for Kids** for YouTube videos (COPPA), which until now always went out as not made for
+  kids.
+- **Advice for the errors those fields can bring**: 2500 (a Visibility the network does not have),
+  2504 (branded content set to private), 2505 (the account no longer allows that Visibility), 2506
+  (the video is longer than the account may post) and 2507 (TikTok is not taking posts from the
+  account right now), plus the new 2500-2599 family.
+
 ## [0.1.3] - 2026-10-10
 
 ### Added
