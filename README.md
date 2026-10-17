@@ -116,6 +116,8 @@ runs on.
 
 - [n8n community nodes documentation](https://docs.n8n.io/integrations/#community-nodes)
 - [PlanVortex API documentation](https://planvortex.com/en/developers)
+- [n8n social media automation: post to your networks and your customers' from one node](https://planvortex.com/en/resources/n8n-social-media-automation)
+- [More guides on planvortex.com](https://planvortex.com/en/resources)
 
 ## License
 
