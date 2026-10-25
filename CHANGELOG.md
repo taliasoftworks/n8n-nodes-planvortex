@@ -4,6 +4,13 @@ All notable changes to `n8n-nodes-planvortex` are documented here. The format fo
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project follows
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2026-10-25
+
+### Changed
+
+- The README links to the n8n guide on planvortex.com and to the rest of the guides. The node is
+  unchanged.
+
 ## [0.1.4] - 2026-10-15
 
 ### Added
