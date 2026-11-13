@@ -68,7 +68,7 @@ const CODE_ADVICE: Partial<Record<PlanVortexErrorCode, Advice>> = {
 	507: 'No organization was found with that ID. Pick it from the Organization dropdown instead of passing one in.',
 	511: 'This is a plan limitation, not a credentials problem: the call is fine and the plan does not include enough users for it. Retrying will fail the same way.',
 	515: 'This is a plan limitation, not a credentials problem: the plan does not include conversations. Retrying will fail the same way.',
-	516: 'This is a PlanVortex plan limitation, not a credentials problem: the app is authenticated, the call is well formed, and the account is on the free plan. The comment inbox and comment replies need a paid plan. Retrying will fail the same way.',
+	516: 'This is a PlanVortex plan limitation, not a credentials problem: the app is authenticated, the call is well formed, and the account is on the free plan. The comment inbox, comment replies and connecting a WhatsApp account need a paid plan. Retrying will fail the same way.',
 	517: 'The PlanVortex account is disabled over its subscription, and this is not about the credentials. A person has to sort the billing out in the PlanVortex panel before any of this works.',
 	512: "This call cannot be made with an app's credentials at all, and an app is all an n8n credential has: it needs a signed-in person in the PlanVortex panel.",
 	519: "This call cannot be made with an app's credentials at all. Connecting a social account in particular is an OAuth flow with a person clicking Authorize on the network's own screen — use the Account > Create Connect Link operation and give the link to that person.",

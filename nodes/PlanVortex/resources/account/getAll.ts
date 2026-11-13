@@ -46,6 +46,7 @@ export const accountGetManyDescription: INodeProperties[] = [
 					{ name: 'Persistent Menu', value: 'persistent_menu' },
 					{ name: 'Products', value: 'products' },
 					{ name: 'Publications', value: 'publications' },
+					{ name: 'Statistics', value: 'statistics' },
 					{ name: 'Webhooks', value: 'webhooks' },
 				],
 				description:

@@ -4,6 +4,22 @@ All notable changes to `n8n-nodes-planvortex` are documented here. The format fo
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project follows
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.1.6] - 2026-11-13
+
+### Added
+
+- **Statistics** in the Capability filter of Account > Get Many: only the accounts whose network
+  PlanVortex reads metrics from (every network but WhatsApp). Social Network > Get Capabilities
+  returns the new `statistics` field with no change to the node, because it passes the matrix
+  through as the API sends it.
+
+### Changed
+
+- The advice for error 516 also names connecting a WhatsApp account, which now needs a paid plan
+  like the comment inbox.
+
 ## [0.1.5] - 2026-10-25
 
 ### Changed
