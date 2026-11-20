@@ -180,6 +180,36 @@ describe('errorFamily', () => {
 	});
 });
 
+describe('comments, and TikTok in particular', () => {
+	/**
+	 * 2600 is the same code for two opposite situations: a LinkedIn personal profile will never
+	 * have an inbox, a TikTok account will as soon as somebody turns it on. Sending a TikTok user
+	 * to LinkedIn pages is exactly the advice-by-range mistake this file exists for.
+	 */
+	it('sends a TikTok 2600 to the panel, and a LinkedIn one to the pages', () => {
+		const tiktok = describeApiError({ code: 2600, data: { social_network: 'tiktok' } }).description;
+		expect(tiktok).toContain('Enable comments');
+		expect(tiktok).not.toContain('LinkedIn');
+
+		const linkedin = describeApiError({
+			code: 2600,
+			data: { social_network: 'linkedin' },
+		}).description;
+		expect(linkedin).toContain('LinkedIn');
+	});
+
+	it('says that a broken TikTok comments credential does not stop publishing', () => {
+		expect(describeApiError({ code: 2804 }).description).toContain(
+			'Publishing with the account still works',
+		);
+		expect(errorFamily(2804)).toBe('tiktok_comments');
+	});
+
+	it('does not suggest hiding your own comment again', () => {
+		expect(describeApiError({ code: 2603 }).description).toContain('Delete it instead');
+	});
+});
+
 describe('the generated catalogue', () => {
 	it('lists the ranges in ascending order, which is what the family lookup walks', () => {
 		const starts = PLANVORTEX_ERROR_RANGES.map((range) => range.from);

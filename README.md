@@ -53,8 +53,10 @@ Five things are worth knowing before you build on them:
   that never went out as sent. *Create* has a **Fail on Publication Errors** toggle, on by default,
   that turns it into a real failure.
 - **Not every network does everything.** WhatsApp has no feed, and Slack and Pinterest publish
-  but have no comment inbox. *Get Capabilities* is how a workflow finds that out once instead of
-  one network at a time, in production. The account dropdown for publishing already hides the
+  but have no comment inbox. On TikTok the inbox is per account: it works once a person turns
+  comments on for that account in the PlanVortex panel, and until then the comment steps fail
+  with error 2600. *Get Capabilities* is how a workflow finds that out once instead of one
+  network at a time, in production. The account dropdown for publishing already hides the
   accounts that cannot publish.
 - **On TikTok, a person chooses who sees the post.** TikTok's content sharing guidelines forbid
   a default, so *Create* has a **Visibility** field and the boxes **Allow Comments**, **Allow

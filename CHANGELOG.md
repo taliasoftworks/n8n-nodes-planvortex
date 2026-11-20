@@ -6,6 +6,22 @@ All notable changes to `n8n-nodes-planvortex` are documented here. The format fo
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-11-20
+
+### Added
+
+- **TikTok comments.** PlanVortex reads and answers TikTok comments now, account by account:
+  a person turns them on in the PlanVortex panel (personal and Business accounts alike).
+  Comment > Get Many and Reply work on those accounts with no change to the node, and the network filter of
+  Get Many lists TikTok because it reads the capability matrix live.
+
+### Changed
+
+- The error catalogue is synced with the server: the TikTok comment codes (2800-2899) and the
+  Discord ones (2700-2799) have families and advice, error 2600 on a TikTok account sends the
+  user to the panel instead of to LinkedIn pages, and 2603 (hiding your own comment) says to
+  delete it instead.
+
 ## [0.1.6] - 2026-11-13
 
 ### Added

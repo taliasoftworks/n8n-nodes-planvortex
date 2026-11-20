@@ -51,7 +51,7 @@
 		},
 		{
 			"from": 1300,
-			"to": 1308,
+			"to": 1309,
 			"family": "client_plan",
 			"label": "client plan"
 		},
@@ -63,7 +63,7 @@
 		},
 		{
 			"from": 1500,
-			"to": 1512,
+			"to": 1517,
 			"family": "messaging",
 			"label": "messaging"
 		},
@@ -108,6 +108,18 @@
 			"to": 2699,
 			"family": "comments",
 			"label": "comments, the ones that no longer fit in 945-948"
+		},
+		{
+			"from": 2700,
+			"to": 2799,
+			"family": "discord",
+			"label": "Discord"
+		},
+		{
+			"from": 2800,
+			"to": 2899,
+			"family": "tiktok_comments",
+			"label": "TikTok comments, the ones that go through TikTok API for Business"
 		}
 	],
 	"rateLimited": [
@@ -383,6 +395,18 @@
 			"message": "Error deleting user in kecloak"
 		},
 		{
+			"code": 613,
+			"message": "Invitation already accepted, log in with your email"
+		},
+		{
+			"code": 614,
+			"message": "The password does not meet the password policy"
+		},
+		{
+			"code": 615,
+			"message": "Invalid language, use one of: es, en, it"
+		},
+		{
 			"code": 700,
 			"message": "Account not connected, missing authorizations tokens"
 		},
@@ -445,6 +469,10 @@
 		{
 			"code": 716,
 			"message": "Could not refresh the account session right now, it will be retried"
+		},
+		{
+			"code": 717,
+			"message": "WhatsApp number disconnected from the API in the WhatsApp Business app"
 		},
 		{
 			"code": 800,
@@ -967,10 +995,6 @@
 			"message": "Invalid organization, deleted"
 		},
 		{
-			"code": 1111,
-			"message": "Invalid organization, cant add plan data without a parent's plan data"
-		},
-		{
 			"code": 1200,
 			"message": "Invalid client permission detected"
 		},
@@ -1035,6 +1059,10 @@
 		{
 			"code": 1308,
 			"message": "This plan does not allow any more apps"
+		},
+		{
+			"code": 1309,
+			"message": "This client has been suspended for breaching the terms of use. Contact contact@planvortex.com"
 		},
 		{
 			"code": 1400,
@@ -1119,6 +1147,26 @@
 		{
 			"code": 1512,
 			"message": "Invalid interactive whatsapp message"
+		},
+		{
+			"code": 1513,
+			"message": "Invalid WhatsApp message template"
+		},
+		{
+			"code": 1514,
+			"message": "The network refused the message template"
+		},
+		{
+			"code": 1515,
+			"message": "The network no longer has this file"
+		},
+		{
+			"code": 1516,
+			"message": "Invalid message or file identifier"
+		},
+		{
+			"code": 1517,
+			"message": "This file cannot be converted to a playable format, download it instead"
 		},
 		{
 			"code": 1600,
@@ -1387,6 +1435,66 @@
 		{
 			"code": 2600,
 			"message": "This account has no comment inbox, although its social network has one"
+		},
+		{
+			"code": 2601,
+			"message": "The social network rejected the action on the comment"
+		},
+		{
+			"code": 2602,
+			"message": "Invalid comment file index"
+		},
+		{
+			"code": 2603,
+			"message": "Your own comments can't be hidden, delete them instead"
+		},
+		{
+			"code": 2700,
+			"message": "The Discord application does not have the PlanVortex redirect URI registered"
+		},
+		{
+			"code": 2701,
+			"message": "Only Discord text channels can be connected"
+		},
+		{
+			"code": 2800,
+			"message": "This account is not a TikTok account"
+		},
+		{
+			"code": 2801,
+			"message": "TikTok API for Business rejected the request"
+		},
+		{
+			"code": 2802,
+			"message": "The TikTok authorization expired or is not valid, start again"
+		},
+		{
+			"code": 2803,
+			"message": "The TikTok account that authorized is not the connected one"
+		},
+		{
+			"code": 2804,
+			"message": "The TikTok comments authorization expired or was revoked, activate comments again"
+		},
+		{
+			"code": 2805,
+			"message": "TikTok is rate limiting this application, try again shortly"
+		},
+		{
+			"code": 2806,
+			"message": "TikTok did not let PlanVortex read this account's profile, so its comments could not be turned on"
+		},
+		{
+			"code": 2807,
+			"message": "Some TikTok permissions were not granted, authorize again accepting all of them"
+		},
+		{
+			"code": 2808,
+			"message": "TikTok comments are not configured on this server"
+		},
+		{
+			"code": 2809,
+			"message": "TikTok keeps this comment hidden (moderation or the author's privacy settings)"
 		}
 	]
 }

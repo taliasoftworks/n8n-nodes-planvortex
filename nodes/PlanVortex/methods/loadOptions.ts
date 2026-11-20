@@ -149,7 +149,9 @@ export async function getSocialNetworks(
  * The networks that have comments at all.
  *
  * It is the capability matrix again, and it is the filter that stops a workflow asking Slack for
- * an inbox it does not have. TikTok and WhatsApp answer `false` here for reasons of their own.
+ * an inbox it does not have. WhatsApp, Slack and Pinterest answer `false` here for their own reasons.
+ * TikTok answers `true`, but a TikTok account only has an inbox once a person turns its
+ * comments on in the PlanVortex panel; until then the API answers error 2600 for it.
  */
 export async function getCommentNetworks(
 	this: ILoadOptionsFunctions,

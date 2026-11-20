@@ -121,6 +121,18 @@ const CODE_ADVICE: Partial<Record<PlanVortexErrorCode, Advice>> = {
 	2506: 'The video is longer than this TikTok account is allowed to post. Trim it, or post it from an account that allows longer videos.',
 	2507: 'TikTok is not taking posts from this account right now, usually because it hit its daily posting limit. It is temporary: schedule the post for later.',
 
+	// ── Comments: an account without an inbox, and what TikTok's comments answer ──────────────
+	// 2600 means two different things and the network tells them apart: a LinkedIn personal
+	// profile can never have an inbox, a TikTok account can as soon as a person turns it on.
+	2600: (data) =>
+		data.social_network === 'tiktok'
+			? 'This TikTok account has no comment inbox yet. TikTok comments are turned on account by account, in the PlanVortex panel (Accounts, the TikTok account, Enable comments), and a personal account works as well as a Business one. A workflow cannot do it; until a person does, retrying will fail the same way. Publishing with the account works as usual.'
+			: 'There are no comments to read here. On LinkedIn only pages have a comment inbox: a personal profile publishes, but LinkedIn does not let any app read its comments. Retrying will fail the same way.',
+	2603: "That comment was written by the client's own account, and no network lets you hide your own comments. Delete it instead, in the PlanVortex panel. Retrying will fail the same way.",
+	2804: "TikTok no longer accepts the authorization behind this account's comments (it expired or was removed on TikTok). A person has to turn comments on again in the PlanVortex panel. Publishing with the account still works.",
+	2805: 'TikTok is throttling PlanVortex for a moment. It is temporary: wait about a minute and space the calls out.',
+	2809: "TikTok keeps this comment hidden (its own moderation, or the privacy settings of whoever wrote it), so showing it had no effect, and nothing on PlanVortex's side can change that.",
+
 	// ── Organizations ────────────────────────────────────────────────────────────────────────
 	1101: 'That organization does not exist. Pick one from the Organization dropdown, which lists exactly the organizations this credential reaches.',
 	1110: 'That organization has been deleted. Pick another one from the Organization dropdown.',
@@ -177,10 +189,17 @@ const FAMILY_ADVICE: Record<PlanVortexErrorFamily, string> = {
 	// arrive inside a publication stored with errors; 2505-2507 when TikTok refuses at publish time.
 	publication_fields:
 		'One of the publication settings was rejected: who can see it, whether it is made for kids, what the audience can do with it, or whether it is commercial content. The message above says which one and what the account allows. Sending it again unchanged will fail the same way.',
-	// 2600-2699, the comment codes that no longer fit in 945-948. Today only 2600: a LinkedIn
-	// personal profile, which publishes but has no comment inbox.
+	// 2600-2699, the comment codes that no longer fit in 945-948. The ones a workflow meets
+	// (2600, 2603) have advice of their own above; this is for the rest.
 	comments:
-		'There are no comments to read here. On LinkedIn only pages have a comment inbox: a personal profile publishes, but LinkedIn does not let any app read its comments. Retrying will fail the same way.',
+		'The social network refused the action on the comment, and the message above says why. Retrying unchanged will fail the same way.',
+	// 2700-2799: the client's own Discord application and the channel picked when connecting.
+	discord:
+		"This is about the client's own Discord application or the channel picked for the account. Both are set up by a person in the PlanVortex panel, not from a workflow.",
+	// 2800-2899: TikTok's comments, which go through a credential of their own (TikTok API for
+	// Business) that a person turns on in the panel. The common ones have advice of their own.
+	tiktok_comments:
+		'This is about TikTok comments, which are turned on and repaired by a person in the PlanVortex panel. Publishing with the account is not affected.',
 };
 
 /** Said about the four codes the API answers with a 429, whatever family they sit in. */
